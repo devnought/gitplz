@@ -78,6 +78,11 @@ impl From<git2::Error> for GitError {
 
 fn git_changes(path: &Path) -> Result<(), GitError> {
     let repo = git2::Repository::open(path)?;
+
+    if repo.is_bare() {
+        return Ok(())
+    }
+
     let mut opts = git2::StatusOptions::new();
 
     opts.include_ignored(false)
