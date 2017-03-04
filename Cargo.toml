@@ -1,0 +1,9 @@
+[package]
+name = "git-plz"
+version = "0.1.0"
+authors = ["Kyle Gretchev <kyle.gretchev@magnetforensics.com>"]
+
+[dependencies]
+git2 = "0.6.4"
+clap = "2.20.5"
+term-painter = "0.2.3"
