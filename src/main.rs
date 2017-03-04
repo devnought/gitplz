@@ -48,10 +48,7 @@ fn walk_dirs(path: &Path) -> io::Result<()> {
                 });
 
             for entry in iter {
-                let mut git_path = entry.path();
-                git_path.push(".git");
-
-                if !git_changes(&entry.path()) {
+                if git_changes(&entry.path()).is_err() {
                     pending.push(entry.path().to_path_buf());
                 }
             }
@@ -65,16 +62,18 @@ fn walk_dirs(path: &Path) -> io::Result<()> {
     Ok(())
 }
 
-fn git_changes(path: &Path) -> bool {
-    let repo = match git2::Repository::open(path) {
-        Ok(r) => r,
-        Err(_) => return false
-    };
+enum GitError {
+    OpenRepo,
+}
 
-    if repo.is_bare() {
-        return false;
+impl From<git2::Error> for GitError {
+    fn from(_: git2::Error) -> Self {
+        GitError::OpenRepo
     }
+}
 
+fn git_changes(path: &Path) -> Result<(), GitError> {
+    let repo = git2::Repository::open(path)?;
     let mut opts = git2::StatusOptions::new();
 
     opts.include_ignored(false)
@@ -101,7 +100,7 @@ fn git_changes(path: &Path) -> bool {
         .peekable();
 
     if statuses_iter.peek().is_none() {
-        return true;
+        return Ok(());
     }
 
     println!("{}", path.to_str().unwrap());
@@ -119,5 +118,5 @@ fn git_changes(path: &Path) -> bool {
         println!("  {} {}", pre, entry.path().unwrap());
     }
 
-    true
+    Ok(())
 }
