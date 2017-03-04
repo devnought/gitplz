@@ -43,7 +43,11 @@ fn walk_dirs(path: &Path) -> io::Result<()> {
                     Err(_) => false,
                 })
                 .filter(|x| match x.path().file_name() {
-                    Some(name) => name.ne(".git") && !name.to_str().unwrap().starts_with("$"),
+                    Some(name) => {
+                        let name_str = name.to_str().unwrap();
+
+                        !name_str.starts_with(".") && !name_str.starts_with("$")
+                    }
                     None => false,
                 });
 
