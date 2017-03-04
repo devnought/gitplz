@@ -35,7 +35,8 @@ fn walk_dirs(path: &Path) -> io::Result<()> {
         let read_result = current_dir.read_dir();
 
         if read_result.is_ok() {
-            let iter = read_result.unwrap()
+            let non_repo_iter = read_result
+                .unwrap()
                 .filter(|x| x.is_ok())
                 .map(|x| x.unwrap())
                 .filter(|x| match x.file_type() {
@@ -49,12 +50,12 @@ fn walk_dirs(path: &Path) -> io::Result<()> {
                         !name_str.starts_with(".") && !name_str.starts_with("$")
                     }
                     None => false,
-                });
+                })
+                .filter(|x| git_changes(&x.path()).is_err()) // Only return folders that arent repos
+                .map(|x| x.path().to_path_buf());
 
-            for entry in iter {
-                if git_changes(&entry.path()).is_err() {
-                    pending.push(entry.path().to_path_buf());
-                }
+            for path in non_repo_iter {
+                pending.push(path);
             }
         }
 
@@ -76,11 +77,12 @@ impl From<git2::Error> for GitError {
     }
 }
 
+// This can become its own iterator
 fn git_changes(path: &Path) -> Result<(), GitError> {
     let repo = git2::Repository::open(path)?;
 
     if repo.is_bare() {
-        return Ok(())
+        return Ok(());
     }
 
     let mut opts = git2::StatusOptions::new();
