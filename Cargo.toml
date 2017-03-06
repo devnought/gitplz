@@ -5,5 +5,5 @@ authors = ["Kyle Gretchev <kyle.gretchev@magnetforensics.com>"]
 
 [dependencies]
 git2 = "0.6.4"
-clap = "2.20.5"
+#clap = "2.20.5"
 colored = "1.4.1"

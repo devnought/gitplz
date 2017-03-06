@@ -2,8 +2,6 @@ extern crate git2;
 extern crate colored;
 
 use std::path::Path;
-use std::iter::Filter;
-use std::slice::Iter;
 use colored::Colorize;
 
 #[derive(Debug)]
