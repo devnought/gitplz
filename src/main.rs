@@ -35,8 +35,7 @@ fn walk_dirs(path: &Path) -> io::Result<()> {
         let read_result = current_dir.read_dir();
 
         if read_result.is_ok() {
-            let non_repo_iter = read_result
-                .unwrap()
+            let non_repo_iter = read_result.unwrap()
                 .filter(|x| x.is_ok())
                 .map(|x| x.unwrap())
                 .filter(|x| match x.file_type() {
@@ -45,13 +44,19 @@ fn walk_dirs(path: &Path) -> io::Result<()> {
                 })
                 .filter(|x| match x.path().file_name() {
                     Some(name) => {
-                        let name_str = name.to_str().unwrap();
-
-                        !name_str.starts_with(".") && !name_str.starts_with("$")
+                        match name.to_str() {
+                            Some(name_str) => {
+                                !name_str.starts_with(".") && !name_str.starts_with("$")
+                            }
+                            None => false,
+                        }
                     }
                     None => false,
                 })
-                .filter(|x| git_changes(&x.path()).is_err()) // Only return folders that arent repos
+                .filter(|x| match git_changes(&x.path()) {  
+                    Err(GitError::OpenRepo) => true, // Only return folders that arent repos
+                    _ => false,
+                })
                 .map(|x| x.path().to_path_buf());
 
             for path in non_repo_iter {
@@ -69,17 +74,12 @@ fn walk_dirs(path: &Path) -> io::Result<()> {
 
 enum GitError {
     OpenRepo,
-}
-
-impl From<git2::Error> for GitError {
-    fn from(_: git2::Error) -> Self {
-        GitError::OpenRepo
-    }
+    Status,
 }
 
 // This can become its own iterator
 fn git_changes(path: &Path) -> Result<(), GitError> {
-    let repo = git2::Repository::open(path)?;
+    let repo = git2::Repository::open(path).map_err(|_| GitError::OpenRepo)?;
 
     if repo.is_bare() {
         return Ok(());
@@ -94,7 +94,7 @@ fn git_changes(path: &Path) -> Result<(), GitError> {
         .disable_pathspec_match(true)
         .exclude_submodules(true);
 
-    let statuses = repo.statuses(Some(&mut opts)).unwrap();
+    let statuses = repo.statuses(Some(&mut opts)).map_err(|_| GitError::Status)?;
     let mut statuses_iter = statuses.iter()
         .filter(|x| {
             if x.status() != git2::STATUS_WT_DELETED {
@@ -103,10 +103,14 @@ fn git_changes(path: &Path) -> Result<(), GitError> {
 
             // For some reason, some files with the deleted
             // status actually still exist, so ignore these.
-            let mut del_path = path.to_path_buf();
-            del_path.push(x.path().unwrap());
-
-            !del_path.exists()
+            match x.path() {
+                None => false,
+                Some(p) => {
+                    let mut del_path = path.to_path_buf();
+                    del_path.push(p);
+                    !del_path.exists()
+                }
+            }
         })
         .peekable();
 
