@@ -1,14 +1,14 @@
 // TODO: Fix unwraps
 
 extern crate git2;
-extern crate term_painter;
+extern crate colored;
 
 use std::error::Error;
 use std::io;
 use std::env;
 use std::path::{Path, PathBuf};
 
-use term_painter::{ToStyle, Color};
+use colored::Colorize;
 
 fn main() {
     let working_dir = match env::current_dir() {
@@ -125,12 +125,12 @@ fn git_changes(path: &Path) -> Result<(), GitError> {
 
     for entry in statuses_iter {
         let pre = match entry.status() {
-            git2::STATUS_WT_DELETED => Color::BrightRed.paint("    Deleted"),
-            git2::STATUS_WT_MODIFIED => Color::BrightCyan.paint("   Modified"),
-            git2::STATUS_WT_NEW => Color::BrightGreen.paint("        New"),
-            git2::STATUS_WT_RENAMED => Color::BrightCyan.paint("    Renamed"),
-            git2::STATUS_WT_TYPECHANGE => Color::BrightCyan.paint("Typechanged"),
-            _ => Color::BrightMagenta.paint("    Unknown"),
+            git2::STATUS_WT_DELETED => "    Deleted".red().bold(),
+            git2::STATUS_WT_MODIFIED => "   Modified".cyan().bold(),
+            git2::STATUS_WT_NEW => "        New".green().bold(),
+            git2::STATUS_WT_RENAMED => "    Renamed".cyan().bold(),
+            git2::STATUS_WT_TYPECHANGE => "Typechanged".cyan().bold(),
+            _ => "    Unknown".magenta().bold(),
         };
 
         println!("  {} {}", pre, entry.path().unwrap());
