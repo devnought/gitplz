@@ -19,7 +19,10 @@ fn main() {
         }
     };
 
-    println!("{:?}", walk_dirs(&working_dir));
+    match walk_dirs(&working_dir) {
+        Err(e) => println!("{:?}", e),
+        _ => {}
+    }
 }
 
 fn walk_dirs(path: &Path) -> io::Result<()> {
