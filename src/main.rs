@@ -27,41 +27,35 @@ fn walk_dirs(path: &Path) -> io::Result<()> {
     let mut pending: Vec<PathBuf> = Vec::new();
 
     loop {
-        let current_dir = if pending.len() == 0 {
-            path.to_path_buf()
-        } else {
-            pending.pop().unwrap()
-        };
-
+        let current_dir = pending.pop().unwrap_or(path.to_owned());
         let read_result = current_dir.read_dir();
 
-        if read_result.is_ok() {
-            let non_repo_iter = read_result.unwrap()
-                .filter(|x| x.is_ok())
+        if let Ok(iter) = read_result {
+            let path_iter = iter.filter(|x| x.is_ok())
                 .map(|x| x.unwrap())
                 .filter(|x| match x.file_type() {
-                    Ok(t) => t.is_dir(),
-                    Err(_) => false,
-                })
+                            Ok(t) => t.is_dir(),
+                            Err(_) => false,
+                        })
                 .filter(|x| match x.path().file_name() {
-                    Some(name) => {
-                        match name.to_str() {
-                            Some(name_str) => {
-                                !name_str.starts_with(".") && !name_str.starts_with("$")
+                            Some(name) => {
+                                match name.to_str() {
+                                    Some(name_str) => {
+                                        !name_str.starts_with(".") && !name_str.starts_with("$")
+                                    }
+                                    None => false,
+                                }
                             }
                             None => false,
-                        }
-                    }
-                    None => false,
-                })
-                .filter(|x| match git::changes(&x.path()) {  
-                    Err(git::GitError::OpenRepo) => true, // Only return folders that arent repos
-                    _ => false,
-                })
-                .map(|x| x.path().to_path_buf());
+                        });
 
-            for path in non_repo_iter {
-                pending.push(path);
+            for entry in path_iter {
+                let p = entry.path();
+                let changes = git::changes(p.as_path());
+
+                if let Err(git::GitError::OpenRepo) = changes {
+                    pending.push(p);
+                }
             }
         }
 
