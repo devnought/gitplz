@@ -2,6 +2,7 @@ extern crate git2;
 extern crate colored;
 
 use std::path::Path;
+use std::marker::PhantomData;
 use std::iter;
 use std::iter::{Map, Filter, Zip, Repeat};
 use colored::Colorize;
@@ -119,50 +120,49 @@ pub fn changes(path: &Path) -> Result<(), GitError> {
 }
 
 
-type IterType<'a, 'b> = Map<Filter<Zip<git2::StatusIter<'a>, Repeat<&'a Path>>,
-                                   fn(&(git2::StatusEntry, &Path)) -> bool>,
-                            fn(git2::StatusEntry) -> GitEntry<'b>>;
+//type IterType<'a, 'b> = Map<Filter<Zip<git2::StatusIter<'a>, Repeat<&'a Path>>,
+//                                   fn(&(git2::StatusEntry, &Path)) -> bool>,
+//                            fn(git2::StatusEntry) -> GitEntry<'b>>;
 
-struct ReturnIter<'a, 'b> {
-    iter: Option<IterType<'a, 'b>>,
+pub struct ReturnIter<'a> {
+    p: PhantomData<&'a bool>,
+    iter: Option<git2::Repository>,
 }
 
-impl<'a, 'b> Iterator for ReturnIter<'a, 'b> {
-    type Item = GitEntry<'b>;
+impl<'a> ReturnIter<'a> {
+    fn new(repo: Option<git2::Repository>) -> Self {
+        let mut opts = git2::StatusOptions::new();
+
+        opts.include_ignored(false)
+            .include_untracked(true)
+            .recurse_untracked_dirs(true)
+            .include_unreadable_as_untracked(true)
+            .disable_pathspec_match(true)
+            .exclude_submodules(true);
+
+        let statuses = repo.statuses(Some(&mut opts)).map_err(|_| GitError::Status)?;
+
+        ReturnIter {
+            p: PhantomData,
+            iter: repo,
+        }
+    }
+}
+
+impl<'a> Iterator for ReturnIter<'a> {
+    type Item = GitEntry<'a>;
 
     fn next(&mut self) -> Option<Self::Item> {
         None
     }
 }
 
-/*
-fn changes2<'a, 'b>(path: &Path) -> ReturnIter {
-    let repo = git2::Repository::open(path).map_err(|_| GitError::OpenRepo).unwrap();
+pub fn changes2(path: &Path) -> ReturnIter {
+    let repo = git2::Repository::open(path).unwrap();
 
     if repo.is_bare() {
-        return ReturnIter { iter: None };
+        return ReturnIter::new(None);
     }
 
-    let mut opts = git2::StatusOptions::new();
-
-    opts.include_ignored(false)
-        .include_untracked(true)
-        .recurse_untracked_dirs(true)
-        .include_unreadable_as_untracked(true)
-        .disable_pathspec_match(true)
-        .exclude_submodules(true);
-
-    let statuses = repo.statuses(Some(&mut opts)).map_err(|_| GitError::Status).unwrap();
-
-    // This iterator clones underneath.
-    // Need to write one that doesn't clone.
-    let path_iter = iter::repeat(path);
-
-    let mut statuses_iter = statuses.iter()
-        .zip(path_iter)
-        .filter(&filter_func)
-        .map(|x| GitEntry::new(x.0));
-
-    ReturnIter { iter: Some(statuses_iter as IterType<'a, 'b>) }
+    ReturnIter::new(Some(repo))
 }
-*/

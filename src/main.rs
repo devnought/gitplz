@@ -51,7 +51,9 @@ fn walk_dirs(path: &Path) -> io::Result<()> {
 
             for entry in path_iter {
                 let p = entry.path();
-                let changes = git::changes(p.as_path());
+                let pth = p.clone();
+                let changes = git::changes(pth.as_path());
+                let changes2 = git::changes2(pth.as_path());
 
                 if let Err(git::GitError::OpenRepo) = changes {
                     pending.push(p);
