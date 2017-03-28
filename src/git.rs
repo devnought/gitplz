@@ -87,13 +87,15 @@ pub fn changes(path: &Path) -> Result<(), GitError> {
         .disable_pathspec_match(true)
         .exclude_submodules(true);
 
-    let statuses = repo.statuses(Some(&mut opts)).map_err(|_| GitError::Status)?;
+    let statuses = repo.statuses(Some(&mut opts))
+        .map_err(|_| GitError::Status)?;
 
     // This iterator clones underneath.
     // Need to write one that doesn't clone.
     let path_iter = iter::repeat(path);
 
-    let mut statuses_iter = statuses.iter()
+    let mut statuses_iter = statuses
+        .iter()
         .zip(path_iter)
         .filter(filter_func)
         .map(map_func)
