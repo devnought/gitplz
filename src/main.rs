@@ -1,5 +1,5 @@
 extern crate git2;
-extern crate colored;
+extern crate term_painter;
 
 use std::error::Error;
 use std::io;

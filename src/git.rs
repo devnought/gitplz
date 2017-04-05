@@ -1,9 +1,12 @@
 extern crate git2;
-extern crate colored;
+extern crate term_painter;
 
 use std::path::Path;
 use std::iter;
-use colored::Colorize;
+use std::marker::PhantomData;
+
+use term_painter::Color::{BrightRed, BrightCyan, BrightGreen, BrightMagenta};
+use term_painter::ToStyle;
 
 #[derive(Debug)]
 pub enum GitError {
@@ -46,29 +49,54 @@ impl<'a> GitEntry<'a> {
     }
 }
 
-fn filter_func(pair: &(git2::StatusEntry, &Path)) -> bool {
-    let entry = &pair.0;
-    let path = &pair.1;
+pub struct GitIter<'a> {
+    iter: Option<git2::StatusIter<'a>>,
+}
 
-    if entry.status() != git2::STATUS_WT_DELETED {
-        return true;
+impl<'a> GitIter<'a> {
+    fn new(statuses: &'a git2::Statuses) -> Self {
+        GitIter { iter: Some(statuses.iter()) }
     }
 
-    // For some reason, some files with the deleted
-    // status actually still exist, so ignore these.
-    match entry.path() {
-        None => false,
-        Some(p) => {
-            let mut del_path = path.to_path_buf();
-            del_path.push(p);
-            !del_path.exists()
+    fn empty() -> Self {
+        GitIter { iter: None }
+    }
+}
+
+impl<'a> Iterator for GitIter<'a> {
+    type Item = GitEntry<'a>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        match self.iter.as_mut() {
+            Some(iter) => iter.next().map(GitEntry::new),
+            None => None,
         }
     }
 }
 
-fn map_func<'a>(pair: (git2::StatusEntry<'a>, &Path)) -> GitEntry<'a> {
-    GitEntry::new(pair.0)
-}
+/*pub fn changes_test<'a>(path: &Path) -> Result<GitIter<'a>, GitError> {
+    let repo = git2::Repository::open(path).map_err(|_| GitError::OpenRepo)?;
+
+    if repo.is_bare() {
+        return Ok(GitIter::empty());
+    }
+
+    let mut opts = git2::StatusOptions::new();
+
+    opts.include_ignored(false)
+        .include_untracked(true)
+        .recurse_untracked_dirs(true)
+        .include_unreadable_as_untracked(true)
+        .disable_pathspec_match(true)
+        .exclude_submodules(true);
+
+    let statuses = repo.statuses(Some(&mut opts))
+        .map_err(|_| GitError::Status)?;
+
+    let iter = GitIter::new(&statuses);
+
+    Ok(iter)
+}*/
 
 // This can become its own iterator
 pub fn changes(path: &Path) -> Result<(), GitError> {
@@ -90,16 +118,7 @@ pub fn changes(path: &Path) -> Result<(), GitError> {
     let statuses = repo.statuses(Some(&mut opts))
         .map_err(|_| GitError::Status)?;
 
-    // This iterator clones underneath.
-    // Need to write one that doesn't clone.
-    let path_iter = iter::repeat(path);
-
-    let mut statuses_iter = statuses
-        .iter()
-        .zip(path_iter)
-        .filter(filter_func)
-        .map(map_func)
-        .peekable();
+    let mut statuses_iter = GitIter::new(&statuses).peekable();
 
     if statuses_iter.peek().is_none() {
         return Ok(());
@@ -108,16 +127,16 @@ pub fn changes(path: &Path) -> Result<(), GitError> {
     println!("{}", path.to_str().unwrap());
 
     for entry in statuses_iter {
-        let pre = match entry.status() {
-            FileStatus::Deleted => "    Deleted".red().bold(),
-            FileStatus::Modified => "   Modified".cyan().bold(),
-            FileStatus::New => "        New".green().bold(),
-            FileStatus::Renamed => "    Renamed".cyan().bold(),
-            FileStatus::Typechanged => "Typechanged".cyan().bold(),
-            FileStatus::Unknown => "    Unknown".magenta().bold(),
+        let (pre, colour) = match entry.status() {
+            FileStatus::Deleted => ("    Deleted", BrightRed),
+            FileStatus::Modified => ("   Modified", BrightCyan),
+            FileStatus::New => ("        New", BrightGreen),
+            FileStatus::Renamed => ("    Renamed", BrightCyan),
+            FileStatus::Typechanged => ("Typechanged", BrightCyan),
+            FileStatus::Unknown => ("    Unknown", BrightMagenta),
         };
 
-        println!("  {} {}", pre, entry.path().unwrap());
+        println!("  {} {}", colour.paint(pre), entry.path().unwrap());
     }
 
     Ok(())
