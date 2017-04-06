@@ -2,9 +2,6 @@ extern crate git2;
 extern crate term_painter;
 
 use std::path::Path;
-use std::iter;
-use std::marker::PhantomData;
-
 use term_painter::Color::{BrightRed, BrightCyan, BrightGreen, BrightMagenta};
 use term_painter::ToStyle;
 
@@ -33,11 +30,11 @@ impl<'a> GitEntry<'a> {
         GitEntry { entry: entry }
     }
 
-    fn path(&self) -> Option<&str> {
+    pub fn path(&self) -> Option<&str> {
         self.entry.path()
     }
 
-    fn status(&self) -> FileStatus {
+    pub fn status(&self) -> FileStatus {
         match self.entry.status() {
             git2::STATUS_WT_DELETED => FileStatus::Deleted,
             git2::STATUS_WT_MODIFIED => FileStatus::Modified,
@@ -50,16 +47,16 @@ impl<'a> GitEntry<'a> {
 }
 
 pub struct GitIter<'a> {
-    iter: Option<git2::StatusIter<'a>>,
+    statuses: Option<git2::StatusIter<'a>>,
 }
 
 impl<'a> GitIter<'a> {
     fn new(statuses: &'a git2::Statuses) -> Self {
-        GitIter { iter: Some(statuses.iter()) }
+        GitIter { statuses: Some(statuses.iter()) }
     }
 
     fn empty() -> Self {
-        GitIter { iter: None }
+        GitIter { statuses: None }
     }
 }
 
@@ -67,66 +64,93 @@ impl<'a> Iterator for GitIter<'a> {
     type Item = GitEntry<'a>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        match self.iter.as_mut() {
-            Some(iter) => iter.next().map(GitEntry::new),
+        match self.statuses.as_mut() {
+            Some(statuses) => statuses.next().map(GitEntry::new),
             None => None,
         }
     }
 }
 
-/*pub fn changes_test<'a>(path: &Path) -> Result<GitIter<'a>, GitError> {
-    let repo = git2::Repository::open(path).map_err(|_| GitError::OpenRepo)?;
+pub struct GitStatuses<'a> {
+    statuses: Option<git2::Statuses<'a>>,
+}
 
-    if repo.is_bare() {
-        return Ok(GitIter::empty());
+impl<'a> GitStatuses<'a> {
+    fn new(statuses: git2::Statuses<'a>) -> Self {
+        GitStatuses { statuses: Some(statuses) }
     }
 
-    let mut opts = git2::StatusOptions::new();
+    fn empty() -> Self {
+        GitStatuses { statuses: None }
+    }
 
-    opts.include_ignored(false)
-        .include_untracked(true)
-        .recurse_untracked_dirs(true)
-        .include_unreadable_as_untracked(true)
-        .disable_pathspec_match(true)
-        .exclude_submodules(true);
+    pub fn len(&self) -> usize {
+        match self.statuses.as_ref() {
+            Some(statuses) => statuses.len(),
+            None => 0
+        }
+    }
 
-    let statuses = repo.statuses(Some(&mut opts))
-        .map_err(|_| GitError::Status)?;
+    pub fn iter(&self) -> GitIter {
+        match self.statuses.as_ref() {
+            Some(statuses) => GitIter::new(statuses),
+            None => GitIter::empty(),
+        }
+    }
+}
 
-    let iter = GitIter::new(&statuses);
+pub struct GitRepo {
+    repo: Option<git2::Repository>,
+}
 
-    Ok(iter)
-}*/
+impl GitRepo {
+    pub fn new(path: &Path) -> Result<Self, GitError> {
+        let repo = git2::Repository::open(path).map_err(|_| GitError::OpenRepo)?;
 
-// This can become its own iterator
+        if repo.is_bare() {
+            return Ok(GitRepo { repo: None });
+        }
+
+        Ok(GitRepo { repo: Some(repo) })
+    }
+
+    pub fn statuses(&self) -> Result<GitStatuses, GitError> {
+        let repo = match self.repo.as_ref() {
+            Some(r) => r,
+            None => return Ok(GitStatuses::empty()),
+        };
+
+        let mut opts = git2::StatusOptions::new();
+
+        opts.include_ignored(false)
+            .include_untracked(true)
+            .recurse_untracked_dirs(true)
+            .include_unreadable_as_untracked(true)
+            .disable_pathspec_match(true)
+            .exclude_submodules(true);
+
+        let statuses = repo.statuses(Some(&mut opts))
+            .map_err(|_| GitError::Status)?;
+
+        Ok(GitStatuses::new(statuses))
+    }
+}
+
+
+
+
+
 pub fn changes(path: &Path) -> Result<(), GitError> {
-    let repo = git2::Repository::open(path).map_err(|_| GitError::OpenRepo)?;
+    let repo = GitRepo::new(path)?;
+    let statuses = repo.statuses()?;
 
-    if repo.is_bare() {
-        return Ok(());
-    }
-
-    let mut opts = git2::StatusOptions::new();
-
-    opts.include_ignored(false)
-        .include_untracked(true)
-        .recurse_untracked_dirs(true)
-        .include_unreadable_as_untracked(true)
-        .disable_pathspec_match(true)
-        .exclude_submodules(true);
-
-    let statuses = repo.statuses(Some(&mut opts))
-        .map_err(|_| GitError::Status)?;
-
-    let mut statuses_iter = GitIter::new(&statuses).peekable();
-
-    if statuses_iter.peek().is_none() {
+    if statuses.len() == 0 {
         return Ok(());
     }
 
     println!("{}", path.to_str().unwrap());
 
-    for entry in statuses_iter {
+    for entry in statuses.iter() {
         let (pre, colour) = match entry.status() {
             FileStatus::Deleted => ("    Deleted", BrightRed),
             FileStatus::Modified => ("   Modified", BrightCyan),
