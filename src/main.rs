@@ -1,4 +1,4 @@
-extern crate git2;
+extern crate gitlib;
 extern crate term_painter;
 
 use std::error::Error;
@@ -9,9 +9,8 @@ use std::path::{Path, PathBuf};
 use term_painter::Color::{BrightRed, BrightCyan, BrightGreen, BrightMagenta};
 use term_painter::ToStyle;
 
-mod git;
-use git::FileStatus;
-use git::{GitError, GitRepo};
+use gitlib::FileStatus;
+use gitlib::{GitError, GitRepo};
 
 fn main() {
     let working_dir = match env::current_dir() {
@@ -35,33 +34,39 @@ fn walk_dirs(path: &Path) -> io::Result<()> {
         let current_dir = pending.pop().unwrap_or(path.to_owned());
         let read_result = current_dir.read_dir();
 
-        if let Ok(iter) = read_result {
-            let path_iter = iter.filter(|x| x.is_ok())
-                .map(|x| x.unwrap())
-                .filter(|x| match x.file_type() {
-                            Ok(t) => t.is_dir(),
-                            Err(_) => false,
-                        })
-                .filter(|x| match x.path().file_name() {
-                            Some(name) => {
-                                match name.to_str() {
-                                    Some(name_str) => {
-                                        !name_str.starts_with(".") && !name_str.starts_with("$")
-                                    }
-                                    None => false,
+        if let Err(_) = read_result {
+            if pending.len() == 0 {
+                break;
+            }
+
+            continue;
+        }
+
+        let path_iter = read_result
+            .unwrap()
+            .filter(|x| x.is_ok())
+            .map(|x| x.unwrap())
+            .filter(|x| match x.file_type() {
+                        Ok(t) => t.is_dir(),
+                        Err(_) => false,
+                    })
+            .filter(|x| match x.path().file_name() {
+                        Some(name) => {
+                            match name.to_str() {
+                                Some(name_str) => {
+                                    !name_str.starts_with(".") && !name_str.starts_with("$")
                                 }
+                                None => false,
                             }
-                            None => false,
-                        });
+                        }
+                        None => false,
+                    });
 
-            for entry in path_iter {
-                let p = entry.path();
-                let pth = p.clone();
-                let changes = changes(pth.as_path());
+        for entry in path_iter {
+            let changes = changes(&entry.path());
 
-                if let Err(GitError::OpenRepo) = changes {
-                    pending.push(p);
-                }
+            if let Err(GitError::OpenRepo) = changes {
+                pending.push(entry.path().to_path_buf());
             }
         }
 

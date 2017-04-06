@@ -2,7 +2,6 @@ extern crate git2;
 
 use std::path::Path;
 
-
 #[derive(Debug)]
 pub enum GitError {
     OpenRepo,

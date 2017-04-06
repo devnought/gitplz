@@ -2,7 +2,7 @@
 name = "git-plz"
 version = "0.1.0"
 dependencies = [
- "git2 0.6.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "gitlib 0.1.0",
  "term-painter 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -57,6 +57,13 @@ dependencies = [
  "openssl-probe 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "openssl-sys 0.9.10 (registry+https://github.com/rust-lang/crates.io-index)",
  "url 1.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "gitlib"
+version = "0.1.0"
+dependencies = [
+ "git2 0.6.4 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
