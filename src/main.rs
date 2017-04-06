@@ -1,5 +1,7 @@
 extern crate gitlib;
 extern crate term_painter;
+extern crate clap;
+extern crate pbr;
 
 use std::error::Error;
 use std::io;
@@ -12,6 +14,8 @@ use term_painter::ToStyle;
 use gitlib::FileStatus;
 use gitlib::{GitError, GitRepo};
 
+mod cli;
+
 fn main() {
     let working_dir = match env::current_dir() {
         Ok(path) => path,
@@ -20,6 +24,8 @@ fn main() {
             return;
         }
     };
+
+    let matches = cli::build_cli().get_matches();
 
     match walk_dirs(&working_dir) {
         Err(e) => println!("{:?}", e),
@@ -63,9 +69,9 @@ fn walk_dirs(path: &Path) -> io::Result<()> {
                     });
 
         for entry in path_iter {
-            let changes = changes(&entry.path());
+            let status = status(&entry.path());
 
-            if let Err(GitError::OpenRepo) = changes {
+            if let Err(GitError::OpenRepo) = status {
                 pending.push(entry.path().to_path_buf());
             }
         }
@@ -78,7 +84,7 @@ fn walk_dirs(path: &Path) -> io::Result<()> {
     Ok(())
 }
 
-fn changes(path: &Path) -> Result<(), GitError> {
+fn status(path: &Path) -> Result<(), GitError> {
     let repo = GitRepo::new(path)?;
     let statuses = repo.statuses()?;
 
