@@ -1,9 +1,7 @@
 extern crate git2;
-extern crate term_painter;
 
 use std::path::Path;
-use term_painter::Color::{BrightRed, BrightCyan, BrightGreen, BrightMagenta};
-use term_painter::ToStyle;
+
 
 #[derive(Debug)]
 pub enum GitError {
@@ -87,7 +85,7 @@ impl<'a> GitStatuses<'a> {
     pub fn len(&self) -> usize {
         match self.statuses.as_ref() {
             Some(statuses) => statuses.len(),
-            None => 0
+            None => 0,
         }
     }
 
@@ -134,34 +132,4 @@ impl GitRepo {
 
         Ok(GitStatuses::new(statuses))
     }
-}
-
-
-
-
-
-pub fn changes(path: &Path) -> Result<(), GitError> {
-    let repo = GitRepo::new(path)?;
-    let statuses = repo.statuses()?;
-
-    if statuses.len() == 0 {
-        return Ok(());
-    }
-
-    println!("{}", path.to_str().unwrap());
-
-    for entry in statuses.iter() {
-        let (pre, colour) = match entry.status() {
-            FileStatus::Deleted => ("    Deleted", BrightRed),
-            FileStatus::Modified => ("   Modified", BrightCyan),
-            FileStatus::New => ("        New", BrightGreen),
-            FileStatus::Renamed => ("    Renamed", BrightCyan),
-            FileStatus::Typechanged => ("Typechanged", BrightCyan),
-            FileStatus::Unknown => ("    Unknown", BrightMagenta),
-        };
-
-        println!("  {} {}", colour.paint(pre), entry.path().unwrap());
-    }
-
-    Ok(())
 }

@@ -6,7 +6,12 @@ use std::io;
 use std::env;
 use std::path::{Path, PathBuf};
 
+use term_painter::Color::{BrightRed, BrightCyan, BrightGreen, BrightMagenta};
+use term_painter::ToStyle;
+
 mod git;
+use git::FileStatus;
+use git::{GitError, GitRepo};
 
 fn main() {
     let working_dir = match env::current_dir() {
@@ -52,9 +57,9 @@ fn walk_dirs(path: &Path) -> io::Result<()> {
             for entry in path_iter {
                 let p = entry.path();
                 let pth = p.clone();
-                let changes = git::changes(pth.as_path());
+                let changes = changes(pth.as_path());
 
-                if let Err(git::GitError::OpenRepo) = changes {
+                if let Err(GitError::OpenRepo) = changes {
                     pending.push(p);
                 }
             }
@@ -63,6 +68,32 @@ fn walk_dirs(path: &Path) -> io::Result<()> {
         if pending.len() == 0 {
             break;
         }
+    }
+
+    Ok(())
+}
+
+fn changes(path: &Path) -> Result<(), GitError> {
+    let repo = GitRepo::new(path)?;
+    let statuses = repo.statuses()?;
+
+    if statuses.len() == 0 {
+        return Ok(());
+    }
+
+    println!("{}", path.to_str().unwrap());
+
+    for entry in statuses.iter() {
+        let (pre, colour) = match entry.status() {
+            FileStatus::Deleted => ("    Deleted", BrightRed),
+            FileStatus::Modified => ("   Modified", BrightCyan),
+            FileStatus::New => ("        New", BrightGreen),
+            FileStatus::Renamed => ("    Renamed", BrightCyan),
+            FileStatus::Typechanged => ("Typechanged", BrightCyan),
+            FileStatus::Unknown => ("    Unknown", BrightMagenta),
+        };
+
+        println!("  {} {}", colour.paint(pre), entry.path().unwrap());
     }
 
     Ok(())
