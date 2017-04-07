@@ -18,3 +18,6 @@ pub use status_iter::GitStatusIter;
 
 mod statuses;
 pub use statuses::GitStatuses;
+
+mod reference;
+pub use reference::GitReference;

@@ -1,5 +1,5 @@
 use std::path::Path;
-use super::{git2, GitStatuses, GitError};
+use super::{git2, GitStatuses, GitError, GitReference};
 
 pub struct GitRepo {
     repo: git2::Repository,
@@ -29,11 +29,8 @@ impl GitRepo {
         Ok(GitStatuses::new(statuses))
     }
 
-    pub fn reset(&self) -> Result<(), GitError> {
+    pub fn reset(&self) -> Result<GitReference, GitError> {
         let head = self.repo.head().map_err(|_| GitError::Reset)?;
-
-        println!("{:?}", head.name());
-
         let obj = head.peel(git2::ObjectType::Any)
             .map_err(|_| GitError::Reset)?;
 
@@ -41,7 +38,7 @@ impl GitRepo {
             .reset(&obj, git2::ResetType::Hard, None)
             .map_err(|_| GitError::Reset)?;
 
-        Ok(())
+        Ok(GitReference::new(head))
     }
 
     pub fn checkout(&self) {}
