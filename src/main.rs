@@ -1,6 +1,8 @@
+#[macro_use]
+extern crate clap;
+
 extern crate gitlib;
 extern crate term_painter;
-extern crate clap;
 extern crate pbr;
 
 use std::error::Error;
@@ -16,6 +18,13 @@ use gitlib::{GitError, GitRepo};
 
 mod cli;
 
+#[derive(Debug)]
+enum RunOptions {
+    Checkout(String),
+    Reset,
+    Status,
+}
+
 fn main() {
     let working_dir = match env::current_dir() {
         Ok(path) => path,
@@ -27,13 +36,33 @@ fn main() {
 
     let matches = cli::build_cli().get_matches();
 
-    match walk_dirs(&working_dir) {
+    let option = match matches.subcommand_name() {
+        Some(cli::CMD_CHECKOUT) => {
+            let branch_match = matches.subcommand_matches(cli::CMD_CHECKOUT).unwrap();
+            let branch = value_t!(branch_match, cli::BRANCH, String).unwrap();
+            RunOptions::Checkout(branch)
+        }
+        Some(cli::CMD_COMPLETIONS) => {
+            if let Some(ref matches) = matches.subcommand_matches(cli::CMD_COMPLETIONS) {
+                let shell = value_t!(matches, cli::SHELL, clap::Shell).unwrap();
+                cli::build_cli().gen_completions_to(cli::APP_NAME, shell, &mut std::io::stdout());
+            }
+
+            return;
+        }
+        Some(cli::CMD_RESET) => RunOptions::Reset,
+
+        // By default, just show status.
+        _ => RunOptions::Status,
+    };
+
+    match walk_dirs(&option, &working_dir) {
         Err(e) => println!("{:?}", e),
         _ => {}
     }
 }
 
-fn walk_dirs(path: &Path) -> io::Result<()> {
+fn walk_dirs(options: &RunOptions, path: &Path) -> io::Result<()> {
     let mut pending: Vec<PathBuf> = Vec::new();
 
     loop {
@@ -69,7 +98,7 @@ fn walk_dirs(path: &Path) -> io::Result<()> {
                     });
 
         for entry in path_iter {
-            let status = status(&entry.path());
+            let status = process(options, &entry.path());
 
             if let Err(GitError::OpenRepo) = status {
                 pending.push(entry.path().to_path_buf());
@@ -84,8 +113,27 @@ fn walk_dirs(path: &Path) -> io::Result<()> {
     Ok(())
 }
 
-fn status(path: &Path) -> Result<(), GitError> {
+fn process(options: &RunOptions, path: &Path) -> Result<(), GitError> {
     let repo = GitRepo::new(path)?;
+
+    match *options {
+        RunOptions::Checkout(ref branch) => checkout(repo, path, branch),
+        RunOptions::Reset => reset(repo, path),
+        RunOptions::Status => status(repo, path),
+    }
+}
+
+fn checkout(repo: GitRepo, path: &Path, branch: &str) -> Result<(), GitError> {
+    Ok(())
+}
+
+fn reset(repo: GitRepo, path: &Path) -> Result<(), GitError> {
+    repo.reset()?;
+
+    Ok(())
+}
+
+fn status(repo: GitRepo, path: &Path) -> Result<(), GitError> {
     let statuses = repo.statuses()?;
 
     if statuses.len() == 0 {
@@ -109,3 +157,4 @@ fn status(path: &Path) -> Result<(), GitError> {
 
     Ok(())
 }
+
