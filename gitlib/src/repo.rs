@@ -34,12 +34,25 @@ impl GitRepo {
         let obj = head.peel(git2::ObjectType::Any)
             .map_err(|_| GitError::Reset)?;
 
+        let mut builder = git2::build::CheckoutBuilder::new();
+        let mut options = builder
+            .remove_untracked(true)
+            .progress(|path, a, b| {
+                if path == None {
+                    return;
+                }
+
+                println!("{:?} {:?} {:?}", path, a, b)
+            });
+
         self.repo
-            .reset(&obj, git2::ResetType::Hard, None)
+            .reset(&obj, git2::ResetType::Hard, Some(options))
             .map_err(|_| GitError::Reset)?;
 
         Ok(GitReference::new(head))
     }
 
-    pub fn checkout(&self) {}
+    pub fn checkout(&self, branch: &str) -> Result<(), GitError> {
+        Ok(())
+    }
 }

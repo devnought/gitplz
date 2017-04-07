@@ -124,6 +124,8 @@ fn process(options: &RunOptions, path: &Path) -> Result<(), GitError> {
 }
 
 fn checkout(repo: GitRepo, path: &Path, branch: &str) -> Result<(), GitError> {
+    repo.checkout(branch)?;
+
     Ok(())
 }
 
@@ -131,7 +133,7 @@ fn reset(repo: GitRepo, path: &Path) -> Result<(), GitError> {
     let head = repo.reset()?;
 
     println!("{}", path.to_str().unwrap());
-    println!("  {}", head.name().unwrap());
+    println!("    {}", head.name().unwrap());
 
     Ok(())
 }
