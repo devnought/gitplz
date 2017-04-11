@@ -79,8 +79,7 @@ fn walk_dirs(options: &RunOptions, path: &Path) -> io::Result<()> {
 
         let path_iter = read_result
             .unwrap()
-            .filter(|x| x.is_ok())
-            .map(|x| x.unwrap())
+            .filter_map(|x| x.ok())
             .filter(|x| match x.file_type() {
                         Ok(t) => t.is_dir(),
                         Err(_) => false,
