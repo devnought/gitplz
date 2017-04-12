@@ -56,24 +56,16 @@ fn main() {
         _ => RunOptions::Status,
     };
 
-    match walk_dirs(&option, &working_dir) {
-        Err(e) => println!("{:?}", e),
-        _ => {}
-    }
+    walk_dirs(&option, &working_dir);
 }
 
-fn walk_dirs(options: &RunOptions, path: &Path) -> io::Result<()> {
-    let mut pending: Vec<PathBuf> = Vec::new();
+fn walk_dirs(options: &RunOptions, path: &Path) {
+    let mut pending = vec![path.to_owned()];
 
-    loop {
-        let current_dir = pending.pop().unwrap_or(path.to_owned());
+    while let Some(current_dir) = pending.pop() {
         let read_result = current_dir.read_dir();
 
         if let Err(_) = read_result {
-            if pending.len() == 0 {
-                break;
-            }
-
             continue;
         }
 
@@ -103,13 +95,7 @@ fn walk_dirs(options: &RunOptions, path: &Path) -> io::Result<()> {
                 pending.push(entry.path().to_path_buf());
             }
         }
-
-        if pending.len() == 0 {
-            break;
-        }
     }
-
-    Ok(())
 }
 
 fn process(options: &RunOptions, path: &Path) -> Result<(), GitError> {
