@@ -6,9 +6,8 @@ extern crate term_painter;
 extern crate pbr;
 
 use std::error::Error;
-use std::io;
 use std::env;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use term_painter::Color::{BrightRed, BrightCyan, BrightGreen, BrightMagenta};
 use term_painter::ToStyle;
@@ -110,6 +109,9 @@ fn process(options: &RunOptions, path: &Path) -> Result<(), GitError> {
 
 fn checkout(repo: GitRepo, path: &Path, branch: &str) -> Result<(), GitError> {
     repo.checkout(branch)?;
+
+    println!("{}", path.to_str().unwrap());
+    println!("    {}", BrightCyan.paint(branch));
 
     Ok(())
 }

@@ -7,12 +7,15 @@ pub struct GitRepo {
 
 impl GitRepo {
     pub fn new(path: &Path) -> Result<Self, GitError> {
-        let repo = git2::Repository::open(path).map_err(|_| GitError::OpenRepo)?;
+        let repo = git2::Repository::open(path)
+            .map_err(|_| GitError::OpenRepo)?;
 
         Ok(GitRepo { repo: repo })
     }
 
     pub fn statuses(&self) -> Result<GitStatuses, GitError> {
+        // self.repo.graph_ahead_behind
+
         let mut opts = git2::StatusOptions::new();
 
         opts.include_ignored(false)
@@ -38,12 +41,12 @@ impl GitRepo {
         let mut options = builder
             .remove_untracked(true)
             .progress(|path, a, b| {
-                if path == None {
-                    return;
-                }
+                          if path == None {
+                              return;
+                          }
 
-                println!("{:?} {:?} {:?}", path, a, b)
-            });
+                          println!("{:?} {:?} {:?}", path, a, b)
+                      });
 
         self.repo
             .reset(&obj, git2::ResetType::Hard, Some(options))
@@ -53,6 +56,9 @@ impl GitRepo {
     }
 
     pub fn checkout(&self, branch: &str) -> Result<(), GitError> {
+        // self.repo.set_head(branch);
+        // self.repo.find_branch(branch, git2::BranchType::)
+
         Ok(())
     }
 }
