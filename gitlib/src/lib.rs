@@ -5,6 +5,22 @@ pub enum GitError {
     OpenRepo,
     Status,
     Reset,
+    Checkout(GitBranch),
+}
+
+#[derive(Debug)]
+pub enum GitBranch {
+    Local,
+    Remote,
+}
+
+impl From<git2::BranchType> for GitBranch {
+    fn from(branch: git2::BranchType) -> Self {
+        match branch {
+            git2::BranchType::Local => GitBranch::Local,
+            git2::BranchType::Remote => GitBranch::Remote,
+        }
+    }
 }
 
 mod repo;

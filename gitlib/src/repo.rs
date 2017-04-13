@@ -1,5 +1,5 @@
 use std::path::Path;
-use super::{git2, GitStatuses, GitError, GitReference};
+use super::{git2, GitStatuses, GitError, GitReference, GitBranch};
 
 pub struct GitRepo {
     repo: git2::Repository,
@@ -55,9 +55,22 @@ impl GitRepo {
         Ok(GitReference::new(head))
     }
 
-    pub fn checkout(&self, branch: &str) -> Result<(), GitError> {
-        // self.repo.set_head(branch);
-        // self.repo.find_branch(branch, git2::BranchType::)
+    pub fn checkout(&self, branch_name: &str) -> Result<(), GitError> {
+        let branch_type = match branch_name.find("origin/") {
+            Some(_) => git2::BranchType::Remote,
+            None => git2::BranchType::Local,
+        };
+
+        let branch = self.repo
+            .find_branch(branch_name, branch_type)
+            .map_err(|_| GitError::Checkout(GitBranch::from(branch_type)))?;
+
+        println!("  {} {}",
+                 match branch_type {
+                     git2::BranchType::Local => " [Local]",
+                     git2::BranchType::Remote => "[Remote]",
+                 },
+                 branch_name);
 
         Ok(())
     }

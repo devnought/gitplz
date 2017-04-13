@@ -9,7 +9,7 @@ use std::error::Error;
 use std::env;
 use std::path::Path;
 
-use term_painter::Color::{BrightRed, BrightCyan, BrightGreen, BrightMagenta};
+use term_painter::Color::{BrightRed, BrightCyan, BrightGreen, BrightMagenta, BrightYellow};
 use term_painter::ToStyle;
 
 use gitlib::FileStatus;
@@ -111,16 +111,22 @@ fn checkout(repo: GitRepo, path: &Path, branch: &str) -> Result<(), GitError> {
     repo.checkout(branch)?;
 
     println!("{}", path.to_str().unwrap());
-    println!("    {}", BrightCyan.paint(branch));
+    //println!("    {}", BrightCyan.paint(branch));
 
     Ok(())
 }
 
 fn reset(repo: GitRepo, path: &Path) -> Result<(), GitError> {
     let head = repo.reset()?;
+    let branch = BrightCyan.paint(head.name().unwrap());
+    let l_brace = BrightYellow.paint("[");
+    let r_brace = BrightYellow.paint("]");
 
-    println!("{}", path.to_str().unwrap());
-    println!("    {}", head.name().unwrap());
+    println!("{}  {}{}{}",
+             path.to_str().unwrap(),
+             l_brace,
+             branch,
+             r_brace);
 
     Ok(())
 }
