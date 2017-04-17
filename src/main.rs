@@ -71,10 +71,7 @@ fn walk_dirs(options: &RunOptions, path: &Path) {
         let path_iter = read_result
             .unwrap()
             .filter_map(|x| x.ok())
-            .filter(|x| match x.file_type() {
-                        Ok(t) => t.is_dir(),
-                        Err(_) => false,
-                    })
+            .filter(|x| x.file_type().map(|t| t.is_dir()).unwrap_or(false))
             .filter(|x| match x.path().file_name() {
                         Some(name) => {
                             match name.to_str() {
