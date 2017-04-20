@@ -1,16 +1,20 @@
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use super::{git2, GitStatuses, GitError, GitReference, GitBranch};
 
 pub struct GitRepo {
     repo: git2::Repository,
+    path: PathBuf,
 }
 
 impl GitRepo {
     pub fn new(path: &Path) -> Result<Self, GitError> {
-        let repo = git2::Repository::open(path)
-            .map_err(|_| GitError::OpenRepo)?;
+        let repo = git2::Repository::open(path).map_err(|_| GitError::OpenRepo)?;
 
-        Ok(GitRepo { repo: repo })
+        Ok(GitRepo { repo: repo, path: path.to_owned() })
+    }
+
+    pub fn path(&self) -> &Path {
+        &self.path
     }
 
     pub fn statuses(&self) -> Result<GitStatuses, GitError> {

@@ -9,5 +9,5 @@ clap = "2.23.3"
 term-painter = "0.2.3"
 pbr = "1.0.0"
 #rayon = "0.7.0"
-#serde = "0.9.14"
+#serde = "1.0.0"
 gitlib = { path = "./gitlib" }

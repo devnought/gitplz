@@ -14,8 +14,7 @@ use std::io::Write;
 use term_painter::Color::{BrightRed, BrightCyan, BrightGreen, BrightMagenta, BrightYellow};
 use term_painter::ToStyle;
 
-use gitlib::FileStatus;
-use gitlib::{GitError, GitRepo};
+use gitlib::{FileStatus, GitError, GitRepo, GitRepositories};
 
 mod cli;
 
@@ -77,65 +76,38 @@ fn main() {
 
     walk_dirs(&mut option, &working_dir);
 }
-// TODO: Try turning this into a custom iterator
+
 fn walk_dirs(option: &mut RunOption, path: &Path) {
-    let mut pending = vec![path.to_owned()];
+    let repos = GitRepositories::new(path);
 
-    while let Some(current_dir) = pending.pop() {
-        let read_result = current_dir.read_dir();
-
-        if let Err(_) = read_result {
-            continue;
-        }
-
-        let path_iter = read_result
-            .unwrap()
-            .filter_map(|x| x.ok())
-            .filter(|x| x.file_type().map(|t| t.is_dir()).unwrap_or(false))
-            .filter(|x| match x.path().file_name() {
-                        Some(name) => {
-                            match name.to_str() {
-                                Some(name_str) => {
-                                    !name_str.starts_with(".") && !name_str.starts_with("$")
-                                }
-                                None => false,
-                            }
-                        }
-                        None => false,
-                    });
-
-        for entry in path_iter {
-            let status = process(option, &entry.path());
-
-            if let Err(GitError::OpenRepo) = status {
-                pending.push(entry.path().to_path_buf());
-            }
+    for repo in repos {
+        match process(option, &repo) {
+            Ok(_) => (),
+            Err(_) => (),
         }
     }
 }
 
-fn process(option: &mut RunOption, path: &Path) -> Result<(), GitError> {
-    let repo = GitRepo::new(path)?;
-
+fn process(option: &mut RunOption, repo: &GitRepo) -> Result<(), GitError> {
     match *option {
-        RunOption::Checkout(ref branch) => checkout(repo, path, branch),
-        RunOption::Manifest(ref mut opt) => manifest(path, opt),
-        RunOption::Reset => reset(repo, path),
-        RunOption::Status => status(repo, path),
+        RunOption::Checkout(ref branch) => checkout(repo, branch),
+        RunOption::Manifest(ref mut opt) => manifest(repo, opt),
+        RunOption::Reset => reset(repo),
+        RunOption::Status => status(repo),
     }
 }
 
-fn checkout(repo: GitRepo, path: &Path, branch: &str) -> Result<(), GitError> {
+fn checkout(repo: &GitRepo, branch: &str) -> Result<(), GitError> {
     repo.checkout(branch)?;
 
-    println!("{}", path.to_str().unwrap());
+    println!("{}", repo.path().to_str().unwrap());
     //println!("    {}", BrightCyan.paint(branch));
 
     Ok(())
 }
 
-fn manifest(path: &Path, opt: &mut ManifestOption) -> Result<(), GitError> {
-    let path_str = path.to_str().unwrap();
+fn manifest(repo: &GitRepo, opt: &mut ManifestOption) -> Result<(), GitError> {
+    let path_str = repo.path().to_str().unwrap();
 
     match *opt {
         ManifestOption::Preview => println!("{}", path_str),
@@ -149,14 +121,14 @@ fn manifest(path: &Path, opt: &mut ManifestOption) -> Result<(), GitError> {
     Ok(())
 }
 
-fn reset(repo: GitRepo, path: &Path) -> Result<(), GitError> {
+fn reset(repo: &GitRepo) -> Result<(), GitError> {
     let head = repo.reset()?;
     let branch = BrightCyan.paint(head.name().unwrap());
     let l_brace = BrightYellow.paint("[");
     let r_brace = BrightYellow.paint("]");
 
     println!("{}  {}{}{}",
-             path.to_str().unwrap(),
+             repo.path().to_str().unwrap(),
              l_brace,
              branch,
              r_brace);
@@ -164,14 +136,14 @@ fn reset(repo: GitRepo, path: &Path) -> Result<(), GitError> {
     Ok(())
 }
 
-fn status(repo: GitRepo, path: &Path) -> Result<(), GitError> {
+fn status(repo: &GitRepo) -> Result<(), GitError> {
     let statuses = repo.statuses()?;
 
     if statuses.len() == 0 {
         return Ok(());
     }
 
-    println!("{}", path.to_str().unwrap());
+    println!("{}", repo.path().to_str().unwrap());
 
     for entry in statuses.iter() {
         let (pre, colour) = match entry.status() {

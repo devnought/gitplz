@@ -24,6 +24,12 @@ impl From<git2::BranchType> for GitBranch {
     }
 }
 
+mod reference;
+pub use reference::GitReference;
+
+mod repo_iter;
+pub use repo_iter::GitRepositories;
+
 mod repo;
 pub use repo::GitRepo;
 
@@ -35,6 +41,3 @@ pub use status_iter::GitStatusIter;
 
 mod statuses;
 pub use statuses::GitStatuses;
-
-mod reference;
-pub use reference::GitReference;
