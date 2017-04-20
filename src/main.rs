@@ -8,6 +8,8 @@ extern crate pbr;
 use std::error::Error;
 use std::env;
 use std::path::Path;
+use std::fs::File;
+use std::io::Write;
 
 use term_painter::Color::{BrightRed, BrightCyan, BrightGreen, BrightMagenta, BrightYellow};
 use term_painter::ToStyle;
@@ -18,10 +20,17 @@ use gitlib::{GitError, GitRepo};
 mod cli;
 
 #[derive(Debug)]
-enum RunOptions {
+enum RunOption {
     Checkout(String),
+    Manifest(ManifestOption),
     Reset,
     Status,
+}
+
+#[derive(Debug)]
+enum ManifestOption {
+    Generate(File),
+    Preview,
 }
 
 fn main() {
@@ -35,11 +44,22 @@ fn main() {
 
     let matches = cli::build_cli().get_matches();
 
-    let option = match matches.subcommand_name() {
+    let mut option = match matches.subcommand_name() {
         Some(cli::CMD_CHECKOUT) => {
             let branch_match = matches.subcommand_matches(cli::CMD_CHECKOUT).unwrap();
             let branch = value_t!(branch_match, cli::BRANCH, String).unwrap();
-            RunOptions::Checkout(branch)
+            RunOption::Checkout(branch)
+        }
+        Some(cli::CMD_MANIFEST) => {
+            let matches = matches.subcommand_matches(cli::CMD_MANIFEST).unwrap();
+
+            match matches.subcommand_name() {
+                Some(cli::CMD_GENERATE) => {
+                    let file = File::create("/manifest.txt").unwrap();
+                    RunOption::Manifest(ManifestOption::Generate(file))
+                }
+                _ => RunOption::Manifest(ManifestOption::Preview),
+            }
         }
         Some(cli::CMD_COMPLETIONS) => {
             if let Some(ref matches) = matches.subcommand_matches(cli::CMD_COMPLETIONS) {
@@ -49,16 +69,16 @@ fn main() {
 
             return;
         }
-        Some(cli::CMD_RESET) => RunOptions::Reset,
+        Some(cli::CMD_RESET) => RunOption::Reset,
 
         // By default, just show status.
-        _ => RunOptions::Status,
+        _ => RunOption::Status,
     };
 
-    walk_dirs(&option, &working_dir);
+    walk_dirs(&mut option, &working_dir);
 }
-
-fn walk_dirs(options: &RunOptions, path: &Path) {
+// TODO: Try turning this into a custom iterator
+fn walk_dirs(option: &mut RunOption, path: &Path) {
     let mut pending = vec![path.to_owned()];
 
     while let Some(current_dir) = pending.pop() {
@@ -85,7 +105,7 @@ fn walk_dirs(options: &RunOptions, path: &Path) {
                     });
 
         for entry in path_iter {
-            let status = process(options, &entry.path());
+            let status = process(option, &entry.path());
 
             if let Err(GitError::OpenRepo) = status {
                 pending.push(entry.path().to_path_buf());
@@ -94,13 +114,14 @@ fn walk_dirs(options: &RunOptions, path: &Path) {
     }
 }
 
-fn process(options: &RunOptions, path: &Path) -> Result<(), GitError> {
+fn process(option: &mut RunOption, path: &Path) -> Result<(), GitError> {
     let repo = GitRepo::new(path)?;
 
-    match *options {
-        RunOptions::Checkout(ref branch) => checkout(repo, path, branch),
-        RunOptions::Reset => reset(repo, path),
-        RunOptions::Status => status(repo, path),
+    match *option {
+        RunOption::Checkout(ref branch) => checkout(repo, path, branch),
+        RunOption::Manifest(ref mut opt) => manifest(path, opt),
+        RunOption::Reset => reset(repo, path),
+        RunOption::Status => status(repo, path),
     }
 }
 
@@ -109,6 +130,21 @@ fn checkout(repo: GitRepo, path: &Path, branch: &str) -> Result<(), GitError> {
 
     println!("{}", path.to_str().unwrap());
     //println!("    {}", BrightCyan.paint(branch));
+
+    Ok(())
+}
+
+fn manifest(path: &Path, opt: &mut ManifestOption) -> Result<(), GitError> {
+    let path_str = path.to_str().unwrap();
+
+    match *opt {
+        ManifestOption::Preview => println!("{}", path_str),
+        ManifestOption::Generate(ref mut file) => {
+            writeln!(file, "{}", path_str)
+                .map_err(|_| GitError::Manifest)
+                .unwrap()
+        }
+    }
 
     Ok(())
 }

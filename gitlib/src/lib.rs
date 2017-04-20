@@ -2,10 +2,11 @@ extern crate git2;
 
 #[derive(Debug)]
 pub enum GitError {
-    OpenRepo,
-    Status,
-    Reset,
     Checkout(GitBranch),
+    Manifest,
+    OpenRepo,
+    Reset,
+    Status,
 }
 
 #[derive(Debug)]
