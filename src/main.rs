@@ -7,7 +7,7 @@ extern crate pbr;
 
 use std::error::Error;
 use std::env;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::fs::File;
 use std::io::Write;
 
@@ -28,7 +28,7 @@ enum RunOption {
 
 #[derive(Debug)]
 enum ManifestOption {
-    Generate(File),
+    Generate(PathBuf),
     Preview,
 }
 
@@ -43,7 +43,7 @@ fn main() {
 
     let matches = cli::build_cli().get_matches();
 
-    let mut option = match matches.subcommand_name() {
+    let option = match matches.subcommand_name() {
         Some(cli::CMD_CHECKOUT) => {
             let branch_match = matches.subcommand_matches(cli::CMD_CHECKOUT).unwrap();
             let branch = value_t!(branch_match, cli::BRANCH, String).unwrap();
@@ -54,8 +54,7 @@ fn main() {
 
             match matches.subcommand_name() {
                 Some(cli::CMD_GENERATE) => {
-                    let file = File::create("/manifest.txt").unwrap();
-                    RunOption::Manifest(ManifestOption::Generate(file))
+                    RunOption::Manifest(ManifestOption::Generate(PathBuf::from("/manifest.txt")))
                 }
                 _ => RunOption::Manifest(ManifestOption::Preview),
             }
@@ -74,26 +73,29 @@ fn main() {
         _ => RunOption::Status,
     };
 
-    walk_dirs(&mut option, &working_dir);
+    process(&option, &working_dir);
 }
 
-fn walk_dirs(option: &mut RunOption, path: &Path) {
+fn process(option: &RunOption, path: &Path) {
     let repos = GitRepositories::new(path);
 
-    for repo in repos {
-        match process(option, &repo) {
-            Ok(_) => (),
-            Err(_) => (),
+    if let RunOption::Manifest(ref m) = *option {
+        match *m {
+            ManifestOption::Generate(ref file) => manifest_generate(repos, file).unwrap(),
+            ManifestOption::Preview => manifest_preview(repos),
         }
+        return;
     }
-}
 
-fn process(option: &mut RunOption, repo: &GitRepo) -> Result<(), GitError> {
-    match *option {
-        RunOption::Checkout(ref branch) => checkout(repo, branch),
-        RunOption::Manifest(ref mut opt) => manifest(repo, opt),
-        RunOption::Reset => reset(repo),
-        RunOption::Status => status(repo),
+    for repo in repos {
+        match *option {
+            RunOption::Checkout(ref branch) => {
+                checkout(&repo, branch).unwrap_or_else(|_| println!("Error on checkout"))
+            }
+            RunOption::Reset => reset(&repo).unwrap(),
+            RunOption::Status => status(&repo).unwrap(),
+            _ => panic!("Unhandled run option")
+        }
     }
 }
 
@@ -106,19 +108,23 @@ fn checkout(repo: &GitRepo, branch: &str) -> Result<(), GitError> {
     Ok(())
 }
 
-fn manifest(repo: &GitRepo, opt: &mut ManifestOption) -> Result<(), GitError> {
-    let path_str = repo.path().to_str().unwrap();
+fn manifest_generate(repos: GitRepositories, path: &Path) -> Result<(), GitError> {
+    let mut file = File::create(path).unwrap();
 
-    match *opt {
-        ManifestOption::Preview => println!("{}", path_str),
-        ManifestOption::Generate(ref mut file) => {
-            writeln!(file, "{}", path_str)
-                .map_err(|_| GitError::Manifest)
-                .unwrap()
+    for repo in repos {
+        match writeln!(file, "{}", repo.path().to_str().unwrap()) {
+            Ok(_) => (),
+            Err(_) => ()
         }
     }
 
     Ok(())
+}
+
+fn manifest_preview(repos: GitRepositories) {
+    for repo in repos {
+        println!("{}", repo.path().to_str().unwrap());
+    }
 }
 
 fn reset(repo: &GitRepo) -> Result<(), GitError> {
