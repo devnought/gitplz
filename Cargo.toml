@@ -11,3 +11,4 @@ pbr = "1.0.0"
 #rayon = "0.7.0"
 #serde = "1.0.0"
 gitlib = { path = "./gitlib" }
+app_dirs = "1.1.1"

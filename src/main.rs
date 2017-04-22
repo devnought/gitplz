@@ -1,20 +1,23 @@
+extern crate app_dirs;
 #[macro_use]
 extern crate clap;
-
 extern crate gitlib;
-extern crate term_painter;
 extern crate pbr;
+extern crate term_painter;
 
 use std::error::Error;
 use std::env;
 use std::path::{Path, PathBuf};
-use std::fs::File;
+use std::fs::{File, DirBuilder};
 use std::io::Write;
+use std::process::exit;
 
 use term_painter::Color::{BrightRed, BrightCyan, BrightGreen, BrightMagenta, BrightYellow};
 use term_painter::ToStyle;
 
 use gitlib::{FileStatus, GitError, GitRepo, GitRepositories};
+
+use app_dirs::{AppInfo, AppDataType};
 
 mod cli;
 
@@ -32,12 +35,18 @@ enum ManifestOption {
     Preview,
 }
 
+
 fn main() {
+    const APP_INFO: AppInfo = AppInfo {
+        name: "git-plz",
+        author: "git-plz",
+    };
+
     let working_dir = match env::current_dir() {
         Ok(path) => path,
         Err(err) => {
             println!("Error getting working directory: {}", err.description());
-            return;
+            exit(1);
         }
     };
 
@@ -54,7 +63,29 @@ fn main() {
 
             match matches.subcommand_name() {
                 Some(cli::CMD_GENERATE) => {
-                    RunOption::Manifest(ManifestOption::Generate(PathBuf::from("/manifest.txt")))
+                    let root = match app_dirs::get_app_root(AppDataType::UserCache, &APP_INFO) {
+                        Ok(d) => d,
+                        Err(e) => {
+                            println!("Could not locate app settings directory: {}", e.description());
+                            exit(1);
+                        }
+                    };
+
+                    let mut manifest = PathBuf::from(root);
+
+                    if !manifest.exists() {
+                        let mut builder = DirBuilder::new();
+                        builder.recursive(true);
+                        
+                        if let Err(e) = builder.create(&manifest) {
+                            println!("Could not create app settings directory: {}", e.description());
+                            exit(1);
+                        }
+                    }
+
+                    manifest.push("manifest.txt");
+
+                    RunOption::Manifest(ManifestOption::Generate(manifest))
                 }
                 _ => RunOption::Manifest(ManifestOption::Preview),
             }
@@ -81,7 +112,7 @@ fn process(option: &RunOption, path: &Path) {
 
     if let RunOption::Manifest(ref m) = *option {
         match *m {
-            ManifestOption::Generate(ref file) => manifest_generate(repos, file).unwrap(),
+            ManifestOption::Generate(ref path) => manifest_generate(repos, path).unwrap(),
             ManifestOption::Preview => manifest_preview(repos),
         }
         return;
@@ -94,7 +125,7 @@ fn process(option: &RunOption, path: &Path) {
             }
             RunOption::Reset => reset(&repo).unwrap(),
             RunOption::Status => status(&repo).unwrap(),
-            _ => panic!("Unhandled run option")
+            _ => panic!("Unhandled run option"),
         }
     }
 }
@@ -114,7 +145,7 @@ fn manifest_generate(repos: GitRepositories, path: &Path) -> Result<(), GitError
     for repo in repos {
         match writeln!(file, "{}", repo.path().to_str().unwrap()) {
             Ok(_) => (),
-            Err(_) => ()
+            Err(_) => (),
         }
     }
 
