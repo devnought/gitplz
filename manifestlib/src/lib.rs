@@ -7,28 +7,29 @@ extern crate gitlib;
 use std::path::{PathBuf, Path};
 use std::fs::{File, DirBuilder};
 use std::io::Write;
+use std::collections::HashSet;
 
 use gitlib::{GitRepo, GitRepositories};
 
 #[derive(Debug)]
 pub struct Manifest {
     data: ManifestData,
-    file: File,
+    path: PathBuf,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 struct ManifestData {
-    repos: Vec<String>,
+    repos: HashSet<String>,
 }
 
 impl ManifestData {
     fn empty() -> Self {
-        ManifestData { repos: Vec::new() }
+        ManifestData { repos: HashSet::new() }
     }
 
     fn add(&mut self, repo: &GitRepo) {
         let path = String::from(repo.path().to_str().unwrap());
-        self.repos.push(path);
+        self.repos.insert(path);
     }
 }
 
@@ -44,31 +45,21 @@ impl Manifest {
     {
         let path_ref = path.as_ref();
 
-        let (manifest_data, file) = match path_ref.exists() {
+        let manifest_data = match path_ref.exists() {
             true => {
                 let file = File::open(path_ref).unwrap();
 
                 match serde_json::from_reader(&file) {
-                    Ok(m) => (m, file),
-                    Err(e) => (ManifestData::empty(), file),
+                    Ok(m) => m,
+                    Err(e) => ManifestData::empty(),
                 }
             }
-            false => {
-                DirBuilder::new()
-                    .recursive(true)
-                    .create(path_ref.parent().unwrap())
-                    .map_err(|_| ManifestError::BuildPath)?;
-
-                let mut file = File::create(path_ref).unwrap();
-                let data = ManifestData::empty();
-
-                (data, file)
-            }
+            false => ManifestData::empty(),
         };
 
         Ok(Manifest {
                data: manifest_data,
-               file: file,
+               path: path_ref.to_path_buf(),
            })
     }
 
@@ -80,7 +71,22 @@ impl Manifest {
         let ser_data = serde_json::to_string_pretty(&self.data).unwrap();
         println!("{}", &ser_data);
 
-        write!(self.file, "{}", ser_data).unwrap();
+        let mut file = self.get_file();
+        match write!(file, "{}", ser_data) {
+            Ok(_) => (),
+            Err(e) => println!("{:#?}", e),
+        }
+    }
+
+    fn get_file(&self) -> File {
+        if !self.path.exists() {
+            DirBuilder::new()
+                .recursive(true)
+                .create(self.path.parent().unwrap())
+                .unwrap();
+        }
+
+        File::create(&self.path).unwrap()
     }
 }
 

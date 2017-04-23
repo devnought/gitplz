@@ -66,13 +66,14 @@ fn main() {
                     let root = match app_dirs::get_app_root(AppDataType::UserCache, &APP_INFO) {
                         Ok(d) => d,
                         Err(e) => {
-                            println!("Could not locate app settings directory: {}", e.description());
+                            println!("Could not locate app settings directory: {}",
+                                     e.description());
                             exit(1);
                         }
                     };
 
                     let mut path = PathBuf::from(root);
-                    path.push("manifest.txt");
+                    path.push("manifest.json");
 
                     RunOption::Manifest(ManifestOption::Generate(path))
                 }
