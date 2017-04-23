@@ -2,20 +2,20 @@ extern crate app_dirs;
 #[macro_use]
 extern crate clap;
 extern crate gitlib;
+extern crate manifestlib;
 extern crate pbr;
 extern crate term_painter;
 
 use std::error::Error;
 use std::env;
 use std::path::{Path, PathBuf};
-use std::fs::{File, DirBuilder};
-use std::io::Write;
 use std::process::exit;
 
 use term_painter::Color::{BrightRed, BrightCyan, BrightGreen, BrightMagenta, BrightYellow};
 use term_painter::ToStyle;
 
 use gitlib::{FileStatus, GitError, GitRepo, GitRepositories};
+use manifestlib::{Manifest, ManifestError};
 
 use app_dirs::{AppInfo, AppDataType};
 
@@ -71,22 +71,12 @@ fn main() {
                         }
                     };
 
-                    let mut manifest = PathBuf::from(root);
+                    let mut path = PathBuf::from(root);
+                    path.push("manifest.txt");
 
-                    if !manifest.exists() {
-                        let mut builder = DirBuilder::new();
-                        builder.recursive(true);
-                        
-                        if let Err(e) = builder.create(&manifest) {
-                            println!("Could not create app settings directory: {}", e.description());
-                            exit(1);
-                        }
-                    }
-
-                    manifest.push("manifest.txt");
-
-                    RunOption::Manifest(ManifestOption::Generate(manifest))
+                    RunOption::Manifest(ManifestOption::Generate(path))
                 }
+
                 _ => RunOption::Manifest(ManifestOption::Preview),
             }
         }
@@ -140,14 +130,9 @@ fn checkout(repo: &GitRepo, branch: &str) -> Result<(), GitError> {
 }
 
 fn manifest_generate(repos: GitRepositories, path: &Path) -> Result<(), GitError> {
-    let mut file = File::create(path).unwrap();
+    let mut manifest = Manifest::open(path).unwrap();
 
-    for repo in repos {
-        match writeln!(file, "{}", repo.path().to_str().unwrap()) {
-            Ok(_) => (),
-            Err(_) => (),
-        }
-    }
+    manifest.add_repositories(repos);
 
     Ok(())
 }
