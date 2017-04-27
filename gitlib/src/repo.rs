@@ -7,10 +7,15 @@ pub struct GitRepo {
 }
 
 impl GitRepo {
-    pub fn new(path: &Path) -> Result<Self, GitError> {
-        let repo = git2::Repository::open(path).map_err(|_| GitError::OpenRepo)?;
+    pub fn new<P: AsRef<Path>>(path: P) -> Result<Self, GitError> {
+        let path_ref = path.as_ref();
+        let repo = git2::Repository::open(path_ref)
+            .map_err(|_| GitError::OpenRepo)?;
 
-        Ok(GitRepo { repo: repo, path: path.to_owned() })
+        Ok(GitRepo {
+               repo: repo,
+               path: path_ref.to_owned(),
+           })
     }
 
     pub fn path(&self) -> &Path {

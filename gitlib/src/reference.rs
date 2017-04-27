@@ -1,4 +1,4 @@
-use super::git2;
+use git2;
 
 pub struct GitReference<'a> {
     reference: git2::Reference<'a>,

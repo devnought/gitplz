@@ -1,4 +1,4 @@
-use super::git2;
+use git2;
 
 #[derive(Debug)]
 pub enum FileStatus {

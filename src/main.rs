@@ -3,7 +3,6 @@ extern crate app_dirs;
 extern crate clap;
 extern crate gitlib;
 extern crate manifestlib;
-extern crate pbr;
 extern crate term_painter;
 
 use std::error::Error;
@@ -15,7 +14,7 @@ use term_painter::Color::{BrightRed, BrightCyan, BrightGreen, BrightMagenta, Bri
 use term_painter::ToStyle;
 
 use gitlib::{FileStatus, GitError, GitRepo, GitRepositories};
-use manifestlib::{Manifest, ManifestError};
+use manifestlib::Manifest;
 
 use app_dirs::{AppInfo, AppDataType};
 
@@ -39,7 +38,7 @@ enum ManifestOption {
 fn main() {
     const APP_INFO: AppInfo = AppInfo {
         name: "git-plz",
-        author: "git-plz",
+        author: "devnought",
     };
 
     let working_dir = match env::current_dir() {
@@ -103,7 +102,9 @@ fn process(option: &RunOption, path: &Path) {
 
     if let RunOption::Manifest(ref m) = *option {
         match *m {
-            ManifestOption::Generate(ref path) => manifest_generate(repos, path).unwrap(),
+            ManifestOption::Generate(ref manifest_path) => {
+                manifest_generate(repos, manifest_path, path).unwrap()
+            }
             ManifestOption::Preview => manifest_preview(repos),
         }
         return;
@@ -130,10 +131,16 @@ fn checkout(repo: &GitRepo, branch: &str) -> Result<(), GitError> {
     Ok(())
 }
 
-fn manifest_generate(repos: GitRepositories, path: &Path) -> Result<(), GitError> {
-    let mut manifest = Manifest::open(path).unwrap();
+fn manifest_generate(repos: GitRepositories, path: &Path, root: &Path) -> Result<(), GitError> {
+    let mut manifest = Manifest::open(path, root).unwrap();
 
     manifest.add_repositories(repos);
+
+    println!("{:#?}", &manifest);
+
+    for repo in manifest.paths() {
+        println!("{:?}", repo.path());
+    }
 
     Ok(())
 }

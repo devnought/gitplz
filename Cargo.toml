@@ -7,8 +7,9 @@ authors = ["Kyle Gretchev <kyle.gretchev@magnetforensics.com>"]
 clap = "2.23.3"
 #colored = "1.4.1"
 term-painter = "0.2.3"
-pbr = "1.0.0"
+#pbr = "1.0.0"
 #rayon = "0.7.0"
+indicatif = { git = "https://github.com/mitsuhiko/indicatif.git" }
 gitlib = { path = "./gitlib" }
 manifestlib = { path = "./manifestlib" }
 app_dirs = "1.1.1"
