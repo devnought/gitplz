@@ -9,7 +9,7 @@ clap = "2.23.3"
 term-painter = "0.2.3"
 #pbr = "1.0.0"
 #rayon = "0.7.0"
-indicatif = { git = "https://github.com/mitsuhiko/indicatif.git" }
+indicatif = "0.3.3"
 gitlib = { path = "./gitlib" }
 manifestlib = { path = "./manifestlib" }
 app_dirs = "1.1.1"

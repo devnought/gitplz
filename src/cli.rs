@@ -1,15 +1,15 @@
 use clap::{Arg, App, SubCommand, Shell};
 
-pub const APP_NAME: &'static str = "git plz";
-pub const CMD_CHECKOUT: &'static str = "checkout";
-pub const CMD_COMPLETIONS: &'static str = "completions";
-pub const CMD_GENERATE: &'static str = "generate";
-pub const CMD_MANIFEST: &'static str = "manifest";
-pub const CMD_PREVIEW: &'static str = "preview";
-pub const CMD_RESET: &'static str = "reset";
-pub const CMD_STATUS: &'static str = "status";
-pub const BRANCH: &'static str = "branch";
-pub const SHELL: &'static str = "shell";
+pub const APP_NAME: &str = "git plz";
+pub const CMD_CHECKOUT: &str = "checkout";
+pub const CMD_COMPLETIONS: &str = "completions";
+pub const CMD_GENERATE: &str = "generate";
+pub const CMD_MANIFEST: &str = "manifest";
+pub const CMD_PREVIEW: &str = "preview";
+pub const CMD_RESET: &str = "reset";
+pub const CMD_STATUS: &str = "status";
+pub const BRANCH: &str = "branch";
+pub const SHELL: &str = "shell";
 
 pub fn build_cli<'a, 'b>() -> App<'a, 'b> {
     App::new("Git, please")
