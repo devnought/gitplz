@@ -132,7 +132,7 @@ fn checkout(repo: &GitRepo, branch: &str) -> Result<(), GitError> {
 }
 
 fn manifest_generate(repos: GitRepositories, path: &Path, root: &Path) -> Result<(), GitError> {
-    let mut manifest = Manifest::open(path, root).unwrap();
+    let mut manifest = Manifest::open(&path, &root).unwrap();
 
     manifest.add_repositories(repos);
 

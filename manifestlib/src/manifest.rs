@@ -9,22 +9,30 @@ use std::collections::BTreeSet;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ManifestData {
-    pub root: PathBuf,
-    pub repos: BTreeSet<String>,
+    root_path: PathBuf,
+    repositories: BTreeSet<PathBuf>,
 }
 
 impl ManifestData {
     fn empty(path: &Path) -> Self {
         ManifestData {
-            repos: BTreeSet::new(),
-            root: path.to_path_buf(),
+            repositories: BTreeSet::new(),
+            root_path: path.to_path_buf(),
         }
     }
 
     fn add(&mut self, repo: &GitRepo) {
-        let path_strip = repo.path().strip_prefix(&self.root).unwrap();
-        let path = String::from(path_strip.to_str().unwrap());
-        self.repos.insert(path);
+        let path_strip = repo.path().strip_prefix(&self.root_path).unwrap();
+        let path = PathBuf::from(path_strip.to_str().unwrap());
+        self.repositories.insert(path);
+    }
+
+    pub fn root(&self) -> &Path {
+        &self.root_path
+    }
+
+    pub fn repos(&self) -> &BTreeSet<PathBuf> {
+        &self.repositories
     }
 }
 
@@ -35,32 +43,36 @@ pub enum ManifestError {
 }
 
 #[derive(Debug)]
-pub struct Manifest {
+pub struct Manifest<'a> {
     data: ManifestData,
-    path: PathBuf,
+    path: &'a Path,
 }
 
-impl Manifest {
-    pub fn open<P>(path: P, root: P) -> Result<Self, ManifestError>
+impl<'a> Manifest<'a> {
+    pub fn open<P>(path: &'a P, root: &'a P) -> Result<Self, ManifestError>
         where P: AsRef<Path>
     {
         let path_ref = path.as_ref();
 
-        let manifest_data = match path_ref.exists() {
-            true => {
-                let file = File::open(path_ref).unwrap();
+        let manifest_data = {
+            let root_ref = root.as_ref();
 
-                match serde_json::from_reader(&file) {
-                    Ok(m) => m,
-                    Err(_) => ManifestData::empty(root.as_ref()),
+            match path_ref.exists() {
+                true => {
+                    let file = File::open(path_ref).unwrap();
+
+                    match serde_json::from_reader(&file) {
+                        Ok(m) => m,
+                        Err(_) => ManifestData::empty(root_ref),
+                    }
                 }
+                false => ManifestData::empty(root_ref),
             }
-            false => ManifestData::empty(root.as_ref()),
         };
 
         Ok(Manifest {
                data: manifest_data,
-               path: path_ref.to_path_buf(),
+               path: path_ref,
            })
     }
 

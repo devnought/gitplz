@@ -1,7 +1,7 @@
 [package]
 name = "git-plz"
 version = "0.1.0"
-authors = ["Kyle Gretchev <kyle.gretchev@magnetforensics.com>"]
+authors = ["Kyle Gretchev <kgretchev@gmail.com>"]
 
 [dependencies]
 clap = "2.23.3"

@@ -2,18 +2,18 @@ use gitlib::GitRepo;
 use manifest::ManifestData;
 
 use std::collections::btree_set::Iter;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 pub struct ManifestIterator<'a> {
-    iter: Iter<'a, String>,
+    iter: Iter<'a, PathBuf>,
     root: &'a Path
 }
 
 impl<'a> ManifestIterator<'a> {
     pub fn new(data: &'a ManifestData) -> Self {
-        let di = &data.repos;
-        let dr = &data.root;
-        ManifestIterator { iter: di.into_iter(), root: dr }
+        let iter = data.repos();
+        let root = data.root();
+        ManifestIterator { iter: iter.into_iter(), root: root }
     }
 }
 
