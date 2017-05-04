@@ -138,10 +138,6 @@ fn manifest_generate(repos: GitRepositories, path: &Path, root: &Path) -> Result
 
     println!("{:#?}", &manifest);
 
-    for repo in manifest.paths() {
-        println!("{:?}", repo.path());
-    }
-
     Ok(())
 }
 

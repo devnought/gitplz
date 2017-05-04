@@ -22,7 +22,16 @@ impl ManifestData {
     }
 
     fn add(&mut self, repo: &GitRepo) {
-        let path_strip = repo.path().strip_prefix(&self.root_path).unwrap();
+        let path_strip = match repo.path().strip_prefix(&self.root_path) {
+            Ok(p) => p,
+            Err(e) => {
+                println!("Root path: {:?}", &self.root_path);
+                println!("Path: {:?}", repo.path());
+                println!("Error: {:?}", e);
+                println!("##########################################");
+                return;
+            }
+        };
         let path = PathBuf::from(path_strip.to_str().unwrap());
         self.repositories.insert(path);
     }
@@ -44,8 +53,8 @@ pub enum ManifestError {
 
 #[derive(Debug)]
 pub struct Manifest<'a> {
-    data: ManifestData,
     path: &'a Path,
+    data: ManifestData,
 }
 
 impl<'a> Manifest<'a> {
