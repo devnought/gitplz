@@ -13,7 +13,7 @@ impl Iterator for ExploratoryMode {
     type Item = GitRepo;
 
     fn next(&mut self) -> Option<Self::Item> {
-        while self.pending.len() > 0 {
+        while self.pending.len() > 0 || self.read_dir.is_some() {
             {
                 let iter = match self.read_dir {
                     Some(ref mut it) => it,
