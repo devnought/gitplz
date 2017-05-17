@@ -58,8 +58,7 @@ pub struct Manifest<'a> {
 }
 
 impl<'a> Manifest<'a> {
-    pub fn open<P>(path: &'a P, root: &'a P) -> Result<Self, ManifestError>
-        where P: AsRef<Path>
+    pub fn open<P: AsRef<Path>>(path: &'a P, root: &'a P) -> Result<Self, ManifestError>
     {
         let path_ref = path.as_ref();
 
@@ -112,5 +111,9 @@ impl<'a> Manifest<'a> {
 
     pub fn paths(&self) -> ManifestIterator {
         ManifestIterator::new(&self.data)
+    }
+
+    pub fn path_in_manifest<P: AsRef<Path>>(&self, path: P) -> bool {
+        true
     }
 }
