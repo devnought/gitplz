@@ -1,4 +1,4 @@
-use gitlib::GitRepo;
+use super::GitRepo;
 use manifest::ManifestData;
 
 use std::collections::btree_set::Iter;

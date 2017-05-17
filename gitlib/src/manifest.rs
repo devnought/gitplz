@@ -1,5 +1,5 @@
 use serde_json;
-use gitlib::{GitRepo, GitRepositories};
+use super::{GitRepo, GitRepositories};
 use manifest_iter::ManifestIterator;
 
 use std::path::{PathBuf, Path};
@@ -58,8 +58,7 @@ pub struct Manifest<'a> {
 }
 
 impl<'a> Manifest<'a> {
-    pub fn open<P: AsRef<Path>>(path: &'a P, root: &'a P) -> Result<Self, ManifestError>
-    {
+    pub fn open<P: AsRef<Path>>(path: &'a P, root: &'a P) -> Result<Self, ManifestError> {
         let path_ref = path.as_ref();
 
         let manifest_data = {
@@ -114,6 +113,6 @@ impl<'a> Manifest<'a> {
     }
 
     pub fn path_in_manifest<P: AsRef<Path>>(&self, path: P) -> bool {
-        true
+        path.as_ref().starts_with(&self.data.root_path)
     }
 }

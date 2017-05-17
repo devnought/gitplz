@@ -1,23 +1,15 @@
 use super::{GitRepo, GitError};
+use super::Manifest;
 
 use std::fs::ReadDir;
 use std::path::{Path, PathBuf};
 
-pub struct GitRepositories {
+struct ExploratoryMode {
     read_dir: Option<ReadDir>,
     pending: Vec<PathBuf>,
 }
 
-impl GitRepositories {
-    pub fn new(path: &Path) -> Self {
-        GitRepositories {
-            read_dir: None,
-            pending: vec![path.to_owned()],
-        }
-    }
-}
-
-impl Iterator for GitRepositories {
+impl Iterator for ExploratoryMode {
     type Item = GitRepo;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -94,5 +86,60 @@ impl Iterator for GitRepositories {
         }
 
         None
+    }
+}
+
+struct ManifestMode {}
+
+impl Iterator for ManifestMode {
+    type Item = GitRepo;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        None
+    }
+}
+
+enum RepoMode {
+    Exploratory(ExploratoryMode),
+    Manifest(ManifestMode),
+}
+
+impl Iterator for RepoMode {
+    type Item = GitRepo;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        match *self {
+            RepoMode::Exploratory(ref mut em) => em.next(),
+            RepoMode::Manifest(ref mut mm) => mm.next(),
+        }
+    }
+}
+
+pub struct GitRepositories {
+    mode: RepoMode,
+}
+
+impl GitRepositories {
+    pub fn new(path: &Path) -> Self {
+        let exp = ExploratoryMode {
+            read_dir: None,
+            pending: vec![path.to_owned()],
+        };
+
+        GitRepositories { mode: RepoMode::Exploratory(exp) }
+    }
+
+    pub fn from_manifest(manifest: &Manifest) -> Self {
+        let man = ManifestMode {};
+
+        GitRepositories { mode: RepoMode::Manifest(man) }
+    }
+}
+
+impl Iterator for GitRepositories {
+    type Item = GitRepo;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.mode.next()
     }
 }

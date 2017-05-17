@@ -1,3 +1,7 @@
+#[macro_use]
+extern crate serde_derive;
+extern crate serde;
+extern crate serde_json;
 extern crate git2;
 
 #[derive(Debug)]
@@ -41,3 +45,15 @@ pub use status_iter::GitStatusIter;
 
 mod statuses;
 pub use statuses::GitStatuses;
+
+mod manifest;
+pub use manifest::{Manifest, ManifestError};
+
+mod manifest_iter;
+pub use manifest_iter::ManifestIterator;
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn it_works() {}
+}
