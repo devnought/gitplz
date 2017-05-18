@@ -104,17 +104,6 @@ enum RepoMode {
     Manifest(ManifestMode),
 }
 
-impl Iterator for RepoMode {
-    type Item = GitRepo;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        match *self {
-            RepoMode::Exploratory(ref mut em) => em.next(),
-            RepoMode::Manifest(ref mut mm) => mm.next(),
-        }
-    }
-}
-
 pub struct GitRepositories {
     mode: RepoMode,
 }
@@ -140,6 +129,9 @@ impl Iterator for GitRepositories {
     type Item = GitRepo;
 
     fn next(&mut self) -> Option<Self::Item> {
-        self.mode.next()
+        match self.mode {
+            RepoMode::Exploratory(ref mut em) => em.next(),
+            RepoMode::Manifest(ref mut mm) => mm.next(),
+        }
     }
 }
