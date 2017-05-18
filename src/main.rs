@@ -1,8 +1,10 @@
-extern crate app_dirs;
 #[macro_use]
 extern crate clap;
-extern crate gitlib;
+extern crate app_dirs;
 extern crate term_painter;
+
+extern crate gitlib;
+extern crate util;
 
 use std::error::Error;
 use std::env;
@@ -12,7 +14,8 @@ use std::process::exit;
 use term_painter::Color::{BrightRed, BrightCyan, BrightGreen, BrightMagenta, BrightYellow};
 use term_painter::ToStyle;
 
-use gitlib::{FileStatus, GitError, GitRepo, GitRepositories, Manifest};
+use gitlib::{FileStatus, GitError, GitRepo};
+use util::{GitRepositories, Manifest};
 
 use app_dirs::{AppInfo, AppDataType};
 

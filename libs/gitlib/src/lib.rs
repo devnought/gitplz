@@ -1,7 +1,3 @@
-#[macro_use]
-extern crate serde_derive;
-extern crate serde;
-extern crate serde_json;
 extern crate git2;
 
 #[derive(Debug)]
@@ -31,9 +27,6 @@ impl From<git2::BranchType> for GitBranch {
 mod reference;
 pub use reference::GitReference;
 
-mod repo_iter;
-pub use repo_iter::GitRepositories;
-
 mod repo;
 pub use repo::GitRepo;
 
@@ -45,12 +38,6 @@ pub use status_iter::GitStatusIter;
 
 mod statuses;
 pub use statuses::GitStatuses;
-
-mod manifest;
-pub use manifest::{Manifest, ManifestError};
-
-mod manifest_iter;
-pub use manifest_iter::ManifestIterator;
 
 #[cfg(test)]
 mod tests {

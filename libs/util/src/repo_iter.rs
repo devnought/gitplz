@@ -1,5 +1,5 @@
-use super::{GitRepo, GitError};
-use super::Manifest;
+use gitlib::{GitRepo, GitError};
+use Manifest;
 
 use std::fs::ReadDir;
 use std::path::{Path, PathBuf};

@@ -1,6 +1,7 @@
 use serde_json;
-use super::{GitRepo, GitRepositories};
+use gitlib::GitRepo;
 use manifest_iter::ManifestIterator;
+use repo_iter::GitRepositories;
 
 use std::path::{PathBuf, Path};
 use std::fs::{File, DirBuilder};

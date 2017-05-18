@@ -10,5 +10,6 @@ term-painter = "0.2.3"
 #pbr = "1.0.0"
 #rayon = "0.7.0"
 indicatif = "0.5.0"
-gitlib = { path = "./gitlib" }
+gitlib = { path = "./libs/gitlib" }
+util = { path = "./libs/util" }
 app_dirs = "1.1.1"
