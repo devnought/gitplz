@@ -123,7 +123,7 @@ impl<'a> GitRepositories<'a> {
     }
 
     pub fn from_manifest(manifest: &'a Manifest) -> Self {
-        let man = ManifestMode { iter: manifest.paths() };
+        let man = ManifestMode { iter: manifest.repos() };
 
         GitRepositories { mode: RepoMode::Manifest(man) }
     }

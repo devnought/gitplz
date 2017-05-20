@@ -114,7 +114,7 @@ impl<'a> Manifest<'a> {
         File::create(&self.path).unwrap()
     }
 
-    pub fn paths(&self) -> ManifestIterator {
+    pub fn repos(&self) -> ManifestIterator {
         ManifestIterator::new(&self.data)
     }
 

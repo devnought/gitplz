@@ -3,11 +3,11 @@ use clap::{Arg, App, SubCommand, Shell};
 pub const APP_NAME: &str = "git plz";
 pub const CMD_CHECKOUT: &str = "checkout";
 pub const CMD_COMPLETIONS: &str = "completions";
-pub const CMD_GENERATE: &str = "generate";
 pub const CMD_MANIFEST: &str = "manifest";
 pub const CMD_PREVIEW: &str = "preview";
 pub const CMD_RESET: &str = "reset";
 pub const CMD_STATUS: &str = "status";
+pub const CMD_UPDATE: &str = "update";
 pub const BRANCH: &str = "branch";
 pub const SHELL: &str = "shell";
 
@@ -30,8 +30,8 @@ pub fn build_cli<'a, 'b>() -> App<'a, 'b> {
                 .help("The shell to generate the script for")))
         .subcommand(SubCommand::with_name(CMD_MANIFEST)
             .about("Inspect or generate manifest files")
-            .subcommand(SubCommand::with_name(CMD_GENERATE)
-                .about("Generate manifest file"))
+            .subcommand(SubCommand::with_name(CMD_UPDATE)
+                .about("Update or generate manifest file"))
             .subcommand(SubCommand::with_name(CMD_PREVIEW)
                 .about("Preview the repositories that will be present in a manifest")))
         .subcommand(SubCommand::with_name(CMD_RESET)

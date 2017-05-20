@@ -29,7 +29,7 @@ enum RunOption {
 
 #[derive(Debug)]
 enum ManifestOption {
-    Generate,
+    Update,
     Preview,
 }
 
@@ -47,7 +47,7 @@ fn main() {
             let matches = matches.subcommand_matches(cli::CMD_MANIFEST).unwrap();
 
             match matches.subcommand_name() {
-                Some(cli::CMD_GENERATE) => RunOption::Manifest(ManifestOption::Generate),
+                Some(cli::CMD_UPDATE) => RunOption::Manifest(ManifestOption::Update),
 
                 _ => RunOption::Manifest(ManifestOption::Preview),
             }
@@ -71,20 +71,22 @@ fn main() {
 
 fn process(option: &RunOption, path: &Path) {
     let manifest_path = build_manifest_path();
-    let manifest = Manifest::open(&manifest_path, &path);
-
-    let repos = match manifest.is_empty() {
-        true => GitRepositories::new(path),
-        false => GitRepositories::from_manifest(&manifest),
-    };
 
     if let RunOption::Manifest(ref m) = *option {
+        let repos = GitRepositories::new(path);
+
         match *m {
-            ManifestOption::Generate => manifest_generate(repos, &manifest_path, path).unwrap(),
+            ManifestOption::Update => manifest_update(repos, &manifest_path, path).unwrap(),
             ManifestOption::Preview => manifest_preview(repos),
         }
         return;
     }
+
+    let manifest = Manifest::open(&manifest_path, &path);
+    let repos = match manifest.is_empty() {
+        true => GitRepositories::new(path),
+        false => GitRepositories::from_manifest(&manifest),
+    };
 
     for repo in repos {
         match *option {
@@ -120,7 +122,7 @@ fn checkout(repo: &GitRepo, branch: &str) -> Result<(), GitError> {
     Ok(())
 }
 
-fn manifest_generate(repos: GitRepositories, path: &Path, root: &Path) -> Result<(), GitError> {
+fn manifest_update(repos: GitRepositories, path: &Path, root: &Path) -> Result<(), GitError> {
     let mut manifest = Manifest::open(&path, &root);
 
     manifest.add_repositories(repos);
