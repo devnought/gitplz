@@ -59,12 +59,17 @@ pub struct Manifest<'a> {
 }
 
 impl<'a> Manifest<'a> {
-    pub fn open<P: AsRef<Path>>(path: &'a P, root: &'a P) -> Result<Self, ManifestError> {
+    pub fn open<P, Q>(path: &'a P, root: &'a Q) -> Self
+        where P: AsRef<Path>,
+              Q: AsRef<Path>
+    {
         let path_ref = path.as_ref();
 
         let manifest_data = {
             let root_ref = root.as_ref();
 
+            // TODO: This can be cleaned up. Probably don't need to check path, and just try to open
+            //       a the file and if it errors, return empty.
             match path_ref.exists() {
                 true => {
                     let file = File::open(path_ref).unwrap();
@@ -78,10 +83,10 @@ impl<'a> Manifest<'a> {
             }
         };
 
-        Ok(Manifest {
-               data: manifest_data,
-               path: path_ref,
-           })
+        Manifest {
+            data: manifest_data,
+            path: path_ref,
+        }
     }
 
     pub fn add_repositories(&mut self, repos: GitRepositories) {
@@ -115,5 +120,9 @@ impl<'a> Manifest<'a> {
 
     pub fn path_in_manifest<P: AsRef<Path>>(&self, path: P) -> bool {
         path.as_ref().starts_with(&self.data.root_path)
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.data.repos().is_empty()
     }
 }

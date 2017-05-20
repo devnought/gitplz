@@ -6,10 +6,8 @@ extern crate term_painter;
 extern crate gitlib;
 extern crate util;
 
-use std::error::Error;
 use std::env;
 use std::path::{Path, PathBuf};
-use std::process::exit;
 
 use term_painter::Color::{BrightRed, BrightCyan, BrightGreen, BrightMagenta, BrightYellow};
 use term_painter::ToStyle;
@@ -31,25 +29,12 @@ enum RunOption {
 
 #[derive(Debug)]
 enum ManifestOption {
-    Generate(PathBuf),
+    Generate,
     Preview,
 }
 
-
 fn main() {
-    const APP_INFO: AppInfo = AppInfo {
-        name: "git-plz",
-        author: "devnought",
-    };
-
-    let working_dir = match env::current_dir() {
-        Ok(path) => path,
-        Err(err) => {
-            println!("Error getting working directory: {}", err.description());
-            exit(1);
-        }
-    };
-
+    let working_dir = env::current_dir().expect("Could not get working directory");
     let matches = cli::build_cli().get_matches();
 
     let option = match matches.subcommand_name() {
@@ -62,21 +47,7 @@ fn main() {
             let matches = matches.subcommand_matches(cli::CMD_MANIFEST).unwrap();
 
             match matches.subcommand_name() {
-                Some(cli::CMD_GENERATE) => {
-                    let root = match app_dirs::get_app_root(AppDataType::UserCache, &APP_INFO) {
-                        Ok(d) => d,
-                        Err(e) => {
-                            println!("Could not locate app settings directory: {}",
-                                     e.description());
-                            exit(1);
-                        }
-                    };
-
-                    let mut path = PathBuf::from(root);
-                    path.push("manifest.json");
-
-                    RunOption::Manifest(ManifestOption::Generate(path))
-                }
+                Some(cli::CMD_GENERATE) => RunOption::Manifest(ManifestOption::Generate),
 
                 _ => RunOption::Manifest(ManifestOption::Preview),
             }
@@ -99,13 +70,17 @@ fn main() {
 }
 
 fn process(option: &RunOption, path: &Path) {
-    let repos = GitRepositories::new(path);
+    let manifest_path = build_manifest_path();
+    let manifest = Manifest::open(&manifest_path, &path);
+
+    let repos = match manifest.is_empty() {
+        true => GitRepositories::new(path),
+        false => GitRepositories::from_manifest(&manifest),
+    };
 
     if let RunOption::Manifest(ref m) = *option {
         match *m {
-            ManifestOption::Generate(ref manifest_path) => {
-                manifest_generate(repos, manifest_path, path).unwrap()
-            }
+            ManifestOption::Generate => manifest_generate(repos, &manifest_path, path).unwrap(),
             ManifestOption::Preview => manifest_preview(repos),
         }
         return;
@@ -123,6 +98,19 @@ fn process(option: &RunOption, path: &Path) {
     }
 }
 
+fn build_manifest_path() -> PathBuf {
+    const APP_INFO: AppInfo = AppInfo {
+        name: "git-plz",
+        author: "devnought",
+    };
+
+    let root = app_dirs::get_app_root(AppDataType::UserCache, &APP_INFO).expect("Could not locate app settings directory");
+    let mut path = PathBuf::from(root);
+    path.push("manifest.json");
+
+    path
+}
+
 fn checkout(repo: &GitRepo, branch: &str) -> Result<(), GitError> {
     repo.checkout(branch)?;
 
@@ -133,7 +121,7 @@ fn checkout(repo: &GitRepo, branch: &str) -> Result<(), GitError> {
 }
 
 fn manifest_generate(repos: GitRepositories, path: &Path, root: &Path) -> Result<(), GitError> {
-    let mut manifest = Manifest::open(&path, &root).unwrap();
+    let mut manifest = Manifest::open(&path, &root);
 
     manifest.add_repositories(repos);
 
