@@ -7,6 +7,7 @@ extern crate gitlib;
 extern crate util;
 
 use std::env;
+use std::fs;
 use std::path::{Path, PathBuf};
 
 use term_painter::Color::{BrightRed, BrightCyan, BrightGreen, BrightMagenta, BrightYellow};
@@ -29,8 +30,9 @@ enum RunOption {
 
 #[derive(Debug)]
 enum ManifestOption {
-    Update,
+    Clean,
     Preview,
+    Update,
 }
 
 fn main() {
@@ -47,8 +49,8 @@ fn main() {
             let matches = matches.subcommand_matches(cli::CMD_MANIFEST).unwrap();
 
             match matches.subcommand_name() {
+                Some(cli::CMD_CLEAN) => RunOption::Manifest(ManifestOption::Clean),
                 Some(cli::CMD_UPDATE) => RunOption::Manifest(ManifestOption::Update),
-
                 _ => RunOption::Manifest(ManifestOption::Preview),
             }
         }
@@ -71,18 +73,19 @@ fn main() {
 
 fn process(option: &RunOption, path: &Path) {
     let manifest_path = build_manifest_path();
+    let mut manifest = Manifest::open(&manifest_path, &path);
 
     if let RunOption::Manifest(ref m) = *option {
         let repos = GitRepositories::new(path);
 
         match *m {
-            ManifestOption::Update => manifest_update(repos, &manifest_path, path).unwrap(),
+            ManifestOption::Clean => manifest_clean(&manifest_path),
             ManifestOption::Preview => manifest_preview(repos),
+            ManifestOption::Update => manifest_update(repos, &mut manifest).unwrap(),
         }
         return;
     }
-
-    let manifest = Manifest::open(&manifest_path, &path);
+    
     let repos = match manifest.is_empty() {
         true => GitRepositories::new(path),
         false => GitRepositories::from_manifest(&manifest),
@@ -122,9 +125,7 @@ fn checkout(repo: &GitRepo, branch: &str) -> Result<(), GitError> {
     Ok(())
 }
 
-fn manifest_update(repos: GitRepositories, path: &Path, root: &Path) -> Result<(), GitError> {
-    let mut manifest = Manifest::open(&path, &root);
-
+fn manifest_update(repos: GitRepositories, manifest: &mut Manifest) -> Result<(), GitError> {
     manifest.add_repositories(repos);
 
     println!("{:#?}", &manifest);
@@ -135,6 +136,14 @@ fn manifest_update(repos: GitRepositories, path: &Path, root: &Path) -> Result<(
 fn manifest_preview(repos: GitRepositories) {
     for repo in repos {
         println!("{}", repo.path().to_str().unwrap());
+    }
+}
+
+fn manifest_clean(manifest_path: &Path) {
+    println!("Attempting to delete: {:?}", manifest_path);
+
+    if manifest_path.exists() {
+        fs::remove_file(manifest_path).unwrap()
     }
 }
 
