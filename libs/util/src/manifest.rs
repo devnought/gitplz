@@ -104,10 +104,12 @@ impl<'a> Manifest<'a> {
     }
 
     fn get_file(&self) -> File {
-        if !self.path.exists() {
+        let manifest_dir = self.path.parent().unwrap();
+
+        if !manifest_dir.exists() {
             DirBuilder::new()
                 .recursive(true)
-                .create(self.path.parent().unwrap())
+                .create(manifest_dir)
                 .unwrap();
         }
 

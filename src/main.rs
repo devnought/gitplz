@@ -81,11 +81,11 @@ fn process(option: &RunOption, path: &Path) {
         match *m {
             ManifestOption::Clean => manifest_clean(&manifest_path),
             ManifestOption::Preview => manifest_preview(repos),
-            ManifestOption::Update => manifest_update(repos, &mut manifest).unwrap(),
+            ManifestOption::Update => manifest_update(repos, &mut manifest),
         }
         return;
     }
-    
+
     let repos = match manifest.is_empty() {
         true => GitRepositories::new(path),
         false => GitRepositories::from_manifest(&manifest),
@@ -125,12 +125,10 @@ fn checkout(repo: &GitRepo, branch: &str) -> Result<(), GitError> {
     Ok(())
 }
 
-fn manifest_update(repos: GitRepositories, manifest: &mut Manifest) -> Result<(), GitError> {
+fn manifest_update(repos: GitRepositories, manifest: &mut Manifest) {
     manifest.add_repositories(repos);
 
     println!("{:#?}", &manifest);
-
-    Ok(())
 }
 
 fn manifest_preview(repos: GitRepositories) {
