@@ -68,18 +68,9 @@ impl<'a> Manifest<'a> {
         let manifest_data = {
             let root_ref = root.as_ref();
 
-            // TODO: This can be cleaned up. Probably don't need to check path, and just try to open
-            //       a the file and if it errors, return empty.
-            match path_ref.exists() {
-                true => {
-                    let file = File::open(path_ref).unwrap();
-
-                    match serde_json::from_reader(&file) {
-                        Ok(m) => m,
-                        Err(_) => ManifestData::empty(root_ref),
-                    }
-                }
-                false => ManifestData::empty(root_ref),
+            match File::open(path_ref) {
+                Ok(f) => serde_json::from_reader(&f).unwrap_or(ManifestData::empty(root_ref)),
+                Err(_) => ManifestData::empty(root_ref),
             }
         };
 
