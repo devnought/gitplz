@@ -4,12 +4,14 @@ version = "0.1.0"
 authors = ["Kyle Gretchev <kgretchev@gmail.com>"]
 
 [dependencies]
+app_dirs = "1.1.1"
 clap = "2.24.2"
 #colored = "1.5.1"
-term-painter = "0.2.3"
+indicatif = "0.5.0"
+num_cpus = "1.4.0"
 #pbr = "1.0.0"
 #rayon = "0.7.0"
-indicatif = "0.5.0"
+term-painter = "0.2.3"
+
 gitlib = { path = "./libs/gitlib" }
 util = { path = "./libs/util" }
-app_dirs = "1.1.1"

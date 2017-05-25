@@ -22,7 +22,7 @@ impl<'a> Iterator for ManifestIterator<'a> {
 
     fn next(&mut self) -> Option<Self::Item> {
         match self.iter.next().map(|x| self.root.join(x)) {
-            Some(p) => Some(GitRepo::new(p).unwrap()),
+            Some(p) => Some(GitRepo::new(p).expect("Failed unwrapping GitRepo in ManifestIterator")),
             None => None,
         }
     }

@@ -1,6 +1,7 @@
+extern crate app_dirs;
 #[macro_use]
 extern crate clap;
-extern crate app_dirs;
+extern crate num_cpus;
 extern crate term_painter;
 
 extern crate gitlib;
@@ -9,14 +10,14 @@ extern crate util;
 use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::thread;
 
+use app_dirs::{AppInfo, AppDataType};
 use term_painter::Color::{BrightRed, BrightCyan, BrightGreen, BrightMagenta, BrightYellow};
 use term_painter::ToStyle;
 
 use gitlib::{FileStatus, GitError, GitRepo};
 use util::{GitRepositories, Manifest};
-
-use app_dirs::{AppInfo, AppDataType};
 
 mod cli;
 
@@ -91,15 +92,22 @@ fn process(option: &RunOption, path: &Path) {
         false => GitRepositories::from_manifest(&manifest),
     };
 
+    //let threads = Vec::with_capacity(num_cpus::get());
+
     for repo in repos {
-        match *option {
-            RunOption::Checkout(ref branch) => {
-                checkout(&repo, branch).unwrap_or_else(|_| println!("Error on checkout"))
+        //thread::spawn(|| {
+            match *option {
+                RunOption::Checkout(ref branch) => {
+                    checkout(&repo, branch).unwrap_or_else(|_| println!("Error on checkout"))
+                }
+                RunOption::Reset => reset(&repo).unwrap(),
+                RunOption::Status => match status(&repo) {
+                    Ok(_) => (),
+                    Err(e) => println!("Status error: {:?} => {:?}", repo.path(), e)
+                },
+                _ => panic!("Unhandled run option"),
             }
-            RunOption::Reset => reset(&repo).unwrap(),
-            RunOption::Status => status(&repo).unwrap(),
-            _ => panic!("Unhandled run option"),
-        }
+        //});
     }
 }
 
@@ -167,7 +175,7 @@ fn status(repo: &GitRepo) -> Result<(), GitError> {
         return Ok(());
     }
 
-    println!("{}", repo.path().to_str().unwrap());
+    println!("{}", repo.path().to_str().expect("Could not unwrap repo path"));
 
     for entry in statuses.iter() {
         let (pre, colour) = match entry.status() {
@@ -179,7 +187,7 @@ fn status(repo: &GitRepo) -> Result<(), GitError> {
             FileStatus::Unknown => ("    Unknown", BrightMagenta),
         };
 
-        println!("  {} {}", colour.paint(pre), entry.path().unwrap());
+        println!("  {} {}", colour.paint(pre), entry.path().expect("Could not unwrap entry path"));
     }
 
     Ok(())

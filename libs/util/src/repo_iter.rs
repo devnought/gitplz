@@ -10,6 +10,10 @@ struct ExploratoryMode {
     pending: Vec<PathBuf>,
 }
 
+// TODO: This iterator is a mess because I didn't want to box
+//       the previous version using map and filter functions.
+//       This can probably go back to what it was once
+//       impl Trait lands.
 impl Iterator for ExploratoryMode {
     type Item = GitRepo;
 
@@ -24,25 +28,20 @@ impl Iterator for ExploratoryMode {
                             None => continue,
                         };
 
-                        let read_result = current_dir.read_dir();
+                        let read_iterator = match current_dir.read_dir() {
+                            Ok(r) => r,
+                            Err(_) => continue,
+                        };
 
-                        if let Err(_) = read_result {
-                            continue;
-                        }
-
-                        let it = read_result.unwrap();
-                        self.read_dir = Some(it);
-                        self.read_dir.as_mut().unwrap()
+                        self.read_dir = Some(read_iterator);
+                        self.read_dir.as_mut().expect("This should have never failed")
                     }
                 };
 
                 while let Some(dir_entry) = iter.next() {
-                    let entry = {
-                        if !dir_entry.is_ok() {
-                            continue;
-                        }
-
-                        dir_entry.unwrap()
+                    let entry = match dir_entry {
+                        Ok(d) => d,
+                        Err(_) => continue,
                     };
 
                     match entry.file_type() {

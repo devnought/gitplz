@@ -59,16 +59,16 @@ pub struct Manifest<'a> {
 }
 
 impl<'a> Manifest<'a> {
-    pub fn open<P, Q>(path: &'a P, root: &'a Q) -> Self
+    pub fn open<P, Q>(manifest_path: &'a P, root: &'a Q) -> Self
         where P: AsRef<Path>,
               Q: AsRef<Path>
     {
-        let path_ref = path.as_ref();
+        let manifest_path_ref = manifest_path.as_ref();
 
         let manifest_data = {
             let root_ref = root.as_ref();
 
-            match File::open(path_ref) {
+            match File::open(manifest_path_ref) {
                 Ok(f) => serde_json::from_reader(&f).unwrap_or(ManifestData::empty(root_ref)),
                 Err(_) => ManifestData::empty(root_ref),
             }
@@ -76,7 +76,7 @@ impl<'a> Manifest<'a> {
 
         Manifest {
             data: manifest_data,
-            path: path_ref,
+            path: manifest_path_ref,
         }
     }
 
@@ -94,6 +94,18 @@ impl<'a> Manifest<'a> {
         }
     }
 
+    pub fn repos(&self) -> ManifestIterator {
+        ManifestIterator::new(&self.data)
+    }
+
+    pub fn path_in_manifest<P: AsRef<Path>>(&self, path: P) -> bool {
+        path.as_ref().starts_with(&self.data.root_path)
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.data.repos().is_empty()
+    }
+
     fn get_file(&self) -> File {
         let manifest_dir = self.path.parent().unwrap();
 
@@ -105,17 +117,5 @@ impl<'a> Manifest<'a> {
         }
 
         File::create(&self.path).unwrap()
-    }
-
-    pub fn repos(&self) -> ManifestIterator {
-        ManifestIterator::new(&self.data)
-    }
-
-    pub fn path_in_manifest<P: AsRef<Path>>(&self, path: P) -> bool {
-        path.as_ref().starts_with(&self.data.root_path)
-    }
-
-    pub fn is_empty(&self) -> bool {
-        self.data.repos().is_empty()
     }
 }
