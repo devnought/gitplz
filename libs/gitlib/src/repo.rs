@@ -6,7 +6,8 @@ pub struct GitRepo {
     path: PathBuf,
 }
 
-//unsafe impl Send for GitRepo {}
+unsafe impl Send for GitRepo {}
+unsafe impl Sync for GitRepo {}
 
 impl GitRepo {
     pub fn new<P: AsRef<Path>>(path: P) -> Result<Self, GitError> {
