@@ -1,8 +1,9 @@
 extern crate app_dirs;
 #[macro_use]
 extern crate clap;
-extern crate num_cpus;
+//extern crate num_cpus;
 extern crate term_painter;
+extern crate threadpool;
 
 extern crate gitlib;
 extern crate util;
@@ -10,11 +11,11 @@ extern crate util;
 use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::thread;
 
 use app_dirs::{AppInfo, AppDataType};
 use term_painter::Color::{BrightRed, BrightCyan, BrightGreen, BrightMagenta, BrightYellow};
 use term_painter::ToStyle;
+//use threadpool::ThreadPool;
 
 use gitlib::{FileStatus, GitError, GitRepo};
 use util::{GitRepositories, Manifest};
@@ -69,14 +70,14 @@ fn main() {
         _ => RunOption::Status,
     };
 
-    process(&option, &working_dir);
+    process(option, &working_dir);
 }
 
-fn process(option: &RunOption, path: &Path) {
+fn process(option: RunOption, path: &Path) {
     let manifest_path = build_manifest_path();
     let mut manifest = Manifest::open(&manifest_path, &path);
 
-    if let RunOption::Manifest(ref m) = *option {
+    if let RunOption::Manifest(ref m) = option {
         let repos = GitRepositories::new(path);
 
         match *m {
@@ -92,20 +93,24 @@ fn process(option: &RunOption, path: &Path) {
         false => GitRepositories::from_manifest(&manifest),
     };
 
-    //let threads = Vec::with_capacity(num_cpus::get());
+    //let num_cpus = num_cpus::get();
+    //let pool = ThreadPool::new(num_cpus);
+
+    let func = match option {
+        /*RunOption::Checkout(ref branch) => {
+            move |repo| {
+                checkout(repo, branch).unwrap_or_else(|_| println!("Error on checkout"));
+            }
+        }*/
+        RunOption::Reset => reset,
+        RunOption::Status => status,
+        _ => panic!("Unhandled run option"),
+    };
 
     for repo in repos {
-        //thread::spawn(|| {
-            match *option {
-                RunOption::Checkout(ref branch) => {
-                    checkout(&repo, branch).unwrap_or_else(|_| println!("Error on checkout"))
-                }
-                RunOption::Reset => reset(&repo).unwrap(),
-                RunOption::Status => match status(&repo) {
-                    Ok(_) => (),
-                    Err(e) => println!("Status error: {:?} => {:?}", repo.path(), e)
-                },
-                _ => panic!("Unhandled run option"),
+        //pool.execute(move || {
+            if let Err(e) = func(&repo) {
+                println!("Error in execution for {:?}: {:?}", repo.path(), e);
             }
         //});
     }
@@ -124,14 +129,14 @@ fn build_manifest_path() -> PathBuf {
     path
 }
 
-fn checkout(repo: &GitRepo, branch: &str) -> Result<(), GitError> {
+/*fn checkout(repo: &GitRepo, branch: &str) -> Result<(), GitError> {
     repo.checkout(branch)?;
 
     println!("{}", repo.path().to_str().unwrap());
     //println!("    {}", BrightCyan.paint(branch));
 
     Ok(())
-}
+}*/
 
 fn manifest_update(repos: GitRepositories, manifest: &mut Manifest) {
     manifest.add_repositories(repos);
@@ -175,7 +180,10 @@ fn status(repo: &GitRepo) -> Result<(), GitError> {
         return Ok(());
     }
 
-    println!("{}", repo.path().to_str().expect("Could not unwrap repo path"));
+    println!("{}",
+             repo.path()
+                 .to_str()
+                 .expect("Could not unwrap repo path"));
 
     for entry in statuses.iter() {
         let (pre, colour) = match entry.status() {
@@ -187,7 +195,9 @@ fn status(repo: &GitRepo) -> Result<(), GitError> {
             FileStatus::Unknown => ("    Unknown", BrightMagenta),
         };
 
-        println!("  {} {}", colour.paint(pre), entry.path().expect("Could not unwrap entry path"));
+        println!("  {} {}",
+                 colour.paint(pre),
+                 entry.path().expect("Could not unwrap entry path"));
     }
 
     Ok(())
