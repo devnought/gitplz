@@ -1,7 +1,7 @@
 extern crate app_dirs;
 #[macro_use]
 extern crate clap;
-//extern crate num_cpus;
+extern crate num_cpus;
 extern crate term_painter;
 extern crate threadpool;
 
@@ -11,11 +11,12 @@ extern crate util;
 use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::sync::mpsc::channel;
 
 use app_dirs::{AppInfo, AppDataType};
 use term_painter::Color::{BrightRed, BrightCyan, BrightGreen, BrightMagenta, BrightYellow};
 use term_painter::ToStyle;
-//use threadpool::ThreadPool;
+use threadpool::ThreadPool;
 
 use gitlib::{FileStatus, GitError, GitRepo};
 use util::{GitRepositories, Manifest};
@@ -93,9 +94,6 @@ fn process(option: RunOption, path: &Path) {
         false => GitRepositories::from_manifest(&manifest),
     };
 
-    //let num_cpus = num_cpus::get();
-    //let pool = ThreadPool::new(num_cpus);
-
     let func = match option {
         /*RunOption::Checkout(ref branch) => {
             move |repo| {
@@ -107,13 +105,28 @@ fn process(option: RunOption, path: &Path) {
         _ => panic!("Unhandled run option"),
     };
 
+    let thread_count = num_cpus::get();
+    let pool = ThreadPool::new(thread_count);
+    let (tx, rx) = channel();
+    let mut repo_count = 0;
+
     for repo in repos {
-        //pool.execute(move || {
+        let tx = tx.clone();
+
+        pool.execute(move || {
             if let Err(e) = func(&repo) {
                 println!("Error in execution for {:?}: {:?}", repo.path(), e);
             }
-        //});
+
+            tx.send(1).expect("Could not signal main thread");
+        });
+
+        repo_count += 1;
     }
+
+    let completed = rx.iter().take(repo_count).sum::<usize>();
+
+    assert_eq!(completed, repo_count);
 }
 
 fn build_manifest_path() -> PathBuf {
