@@ -205,12 +205,20 @@ fn status(repo: &GitRepo) -> Result<(), GitError> {
 
     for entry in statuses.iter() {
         let (pre, colour) = match entry.status() {
-            FileStatus::Deleted => ("    Deleted", BrightRed),
-            FileStatus::Modified => ("   Modified", BrightCyan),
-            FileStatus::New => ("        New", BrightGreen),
-            FileStatus::Renamed => ("    Renamed", BrightCyan),
-            FileStatus::Typechanged => ("Typechanged", BrightCyan),
-            FileStatus::Unknown => ("    Unknown", BrightMagenta),
+            FileStatus::Conflicted => ("       Conflicted", BrightMagenta),
+            FileStatus::Current => ("          Current", BrightMagenta),
+            FileStatus::Deleted => ("          Deleted", BrightRed),
+            FileStatus::Ignored => ("          Ignored", BrightMagenta),
+            FileStatus::StagedNew => ("       Staged New", BrightMagenta),
+            FileStatus::StagedModified => ("  Staged Modified", BrightMagenta),
+            FileStatus::StagedDeleted => ("   Staged Deleted", BrightMagenta),
+            FileStatus::StagedRenamed => ("   Staged Renamed", BrightMagenta),
+            FileStatus::StagedTypechange => ("Staged Typechange", BrightMagenta),
+            FileStatus::Modified => ("         Modified", BrightCyan),
+            FileStatus::New => ("              New", BrightGreen),
+            FileStatus::Renamed => ("          Renamed", BrightCyan),
+            FileStatus::Typechange => ("       Typechange", BrightCyan),
+            FileStatus::Unknown => ("          Unknown", BrightMagenta),
         };
 
         println!("  {} {}",
