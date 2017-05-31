@@ -23,7 +23,7 @@ use util::{GitRepositories, Manifest};
 
 mod cli;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 enum RunOption {
     Checkout(String),
     Manifest(ManifestOption),
@@ -31,7 +31,7 @@ enum RunOption {
     Status,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 enum ManifestOption {
     Clean,
     Preview,
@@ -94,17 +94,6 @@ fn process(option: RunOption, path: &Path) {
         false => GitRepositories::from_manifest(&manifest),
     };
 
-    let func = match option {
-        /*RunOption::Checkout(ref branch) => {
-            move |repo| {
-                checkout(repo, branch).unwrap_or_else(|_| println!("Error on checkout"));
-            }
-        }*/
-        RunOption::Reset => reset,
-        RunOption::Status => status,
-        _ => panic!("Unhandled run option"),
-    };
-
     let thread_count = num_cpus::get();
     let pool = ThreadPool::new(thread_count);
     let (tx, rx) = channel();
@@ -112,10 +101,21 @@ fn process(option: RunOption, path: &Path) {
 
     for repo in repos {
         let tx = tx.clone();
+        let option = option.clone();
 
         pool.execute(move || {
-            if let Err(e) = func(&repo) {
-                println!("Error in execution for {:?}: {:?}", repo.path(), e);
+            let result = match option {
+                RunOption::Checkout(ref branch) => checkout(&repo, branch),
+                RunOption::Reset => reset(&repo),
+                RunOption::Status => status(&repo),
+                _ => {
+                    tx.send(1).expect("Could not signal main thread");
+                    panic!("Unhandled run option");
+                }
+            };
+
+            if let Err(e) = result {
+                println!("Error in process: {:?}", e);
             }
 
             tx.send(1).expect("Could not signal main thread");
@@ -142,14 +142,17 @@ fn build_manifest_path() -> PathBuf {
     path
 }
 
-/*fn checkout(repo: &GitRepo, branch: &str) -> Result<(), GitError> {
+fn checkout(repo: &GitRepo, branch: &str) -> Result<(), GitError> {
     repo.checkout(branch)?;
 
-    println!("{}", repo.path().to_str().unwrap());
-    //println!("    {}", BrightCyan.paint(branch));
+    println!("{}",
+             repo.path()
+                 .to_str()
+                 .expect("Could not unwrap repo path"));
+    println!("    {}", BrightCyan.paint(branch));
 
     Ok(())
-}*/
+}
 
 fn manifest_update(repos: GitRepositories, manifest: &mut Manifest) {
     manifest.add_repositories(repos);
@@ -173,12 +176,14 @@ fn manifest_clean(manifest_path: &Path) {
 
 fn reset(repo: &GitRepo) -> Result<(), GitError> {
     let head = repo.reset()?;
-    let branch = BrightCyan.paint(head.name().unwrap());
+    let branch = BrightCyan.paint(head.name().expect("Error unwrapping head name"));
     let l_brace = BrightYellow.paint("[");
     let r_brace = BrightYellow.paint("]");
 
     println!("{}  {}{}{}",
-             repo.path().to_str().unwrap(),
+             repo.path()
+                 .to_str()
+                 .expect("Error unwrapping repo path"),
              l_brace,
              branch,
              r_brace);
