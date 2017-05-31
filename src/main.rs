@@ -115,7 +115,7 @@ fn process(option: RunOption, path: &Path) {
             };
 
             if let Err(e) = result {
-                println!("Error in process: {:?}", e);
+                println!("Error in process: {:?} => {:?}", repo.path(), e);
             }
 
             tx.send(1).expect("Could not signal main thread");
