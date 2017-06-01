@@ -142,18 +142,6 @@ fn build_manifest_path() -> PathBuf {
     path
 }
 
-fn checkout(repo: &GitRepo, branch: &str) -> Result<(), GitError> {
-    repo.checkout(branch)?;
-
-    println!("{}",
-             repo.path()
-                 .to_str()
-                 .expect("Could not unwrap repo path"));
-    println!("    {}", BrightCyan.paint(branch));
-
-    Ok(())
-}
-
 fn manifest_update(repos: GitRepositories, manifest: &mut Manifest) {
     manifest.add_repositories(repos);
 
@@ -174,19 +162,31 @@ fn manifest_clean(manifest_path: &Path) {
     }
 }
 
+fn checkout(repo: &GitRepo, branch: &str) -> Result<(), GitError> {
+    repo.checkout(branch)?;
+
+    println!("{}",
+             repo.path()
+                 .to_str()
+                 .expect("Could not unwrap repo path"));
+    println!("    {}", BrightCyan.paint(branch));
+
+    Ok(())
+}
+
 fn reset(repo: &GitRepo) -> Result<(), GitError> {
     let head = repo.reset()?;
     let branch = BrightCyan.paint(head.name().expect("Error unwrapping head name"));
     let l_brace = BrightYellow.paint("[");
     let r_brace = BrightYellow.paint("]");
 
-    println!("{}  {}{}{}",
-             repo.path()
-                 .to_str()
-                 .expect("Error unwrapping repo path"),
+    println!("  {}{}{}  {}",
              l_brace,
              branch,
-             r_brace);
+             r_brace,
+             repo.path()
+                 .to_str()
+                 .expect("Error unwrapping repo path"));
 
     Ok(())
 }

@@ -77,6 +77,15 @@ impl GitRepo {
             .find_branch(branch_name, branch_type)
             .map_err(|_| GitError::Checkout(GitBranch::from(branch_type)))?;
 
+        let obj = branch
+            .get()
+            .peel(git2::ObjectType::Any)
+            .map_err(|_| GitError::Checkout(GitBranch::from(branch_type)))?;
+
+        self.repo
+            .checkout_tree(&obj, None)
+            .map_err(|_| GitError::Checkout(GitBranch::from(branch_type)))?;
+
         println!("  {} {}",
                  match branch_type {
                      git2::BranchType::Local => " [Local]",
