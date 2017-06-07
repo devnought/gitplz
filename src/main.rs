@@ -175,6 +175,11 @@ fn checkout(repo: &GitRepo, branch: &str) -> Result<(), GitError> {
 }
 
 fn reset(repo: &GitRepo) -> Result<(), GitError> {
+    // This might not actually give any performance boost
+    if repo.statuses()?.len() == 0 {
+        return Ok(());
+    }
+
     let head = repo.reset()?;
     let branch = BrightCyan.paint(head.name().expect("Error unwrapping head name"));
     let l_brace = BrightYellow.paint("[");

@@ -95,4 +95,45 @@ impl GitRepo {
 
         Ok(())
     }
+
+    pub fn state(&self) -> RepoState {
+        RepoState::from(self.repo.state())
+    }
+}
+
+#[derive(Debug)]
+pub enum RepoState {
+    Clean,
+    Merge,
+    Revert,
+    RevertSequence,
+    CherryPick,
+    CherryPickSequence,
+    Bisect,
+    Rebase,
+    RebaseInteractive,
+    RebaseMerge,
+    ApplyMailbox,
+    ApplyMailboxOrRebase,
+}
+
+impl From<git2::RepositoryState> for RepoState {
+    fn from(state: git2::RepositoryState) -> Self {
+        use git2::RepositoryState;
+
+        match state {
+            RepositoryState::Clean => RepoState::Clean,
+            RepositoryState::Merge => RepoState::Merge,
+            RepositoryState::Revert => RepoState::Revert,
+            RepositoryState::RevertSequence => RepoState::RevertSequence,
+            RepositoryState::CherryPick => RepoState::CherryPick,
+            RepositoryState::CherryPickSequence => RepoState::CherryPickSequence,
+            RepositoryState::Bisect => RepoState::Bisect,
+            RepositoryState::Rebase => RepoState::Rebase,
+            RepositoryState::RebaseInteractive => RepoState::RebaseInteractive,
+            RepositoryState::RebaseMerge => RepoState::RebaseMerge,
+            RepositoryState::ApplyMailbox => RepoState::ApplyMailbox,
+            RepositoryState::ApplyMailboxOrRebase => RepoState::ApplyMailboxOrRebase,
+        }
+    }
 }
