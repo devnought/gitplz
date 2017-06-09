@@ -5,6 +5,7 @@ pub enum GitError {
     Checkout(GitBranch),
     Manifest,
     OpenRepo,
+    RemoveUntracked,
     Reset,
     Status,
 }

@@ -1,5 +1,7 @@
 use std::path::{Path, PathBuf};
-use super::{git2, GitStatuses, GitError, GitReference, GitBranch};
+use std::fs;
+
+use super::{git2, GitStatuses, GitError, GitReference, GitBranch, FileStatus};
 
 pub struct GitRepo {
     repo: git2::Repository,
@@ -51,7 +53,7 @@ impl GitRepo {
 
         let mut builder = git2::build::CheckoutBuilder::new();
         let mut options = builder
-            .remove_untracked(true)
+            .remove_untracked(true) // this is ignored for a reset :()
             .progress(|path, a, b| {
                           if path == None {
                               return;
@@ -92,6 +94,34 @@ impl GitRepo {
                      git2::BranchType::Remote => "[Remote]",
                  },
                  branch_name);
+
+        Ok(())
+    }
+
+    pub fn remove_untracked(&self) -> Result<(), GitError> {
+        let statuses = self.statuses()?;
+        let iter = statuses
+            .iter()
+            .filter(|x| match x.status() {
+                        FileStatus::New => true,
+                        _ => false,
+                    });
+
+        // TODO: Finish this nonsense
+        for entry in iter {
+            let p = self.path
+                .join(entry.path().expect("Invalid file path in remove_untracked"));
+
+            // The whole file/directory distinction might be useless.
+            // If a untracked file is removed from an untracked directory, should also
+            // remove now empty directory?
+            if p.is_file() {
+                fs::remove_file(p).map_err(|_| GitError::RemoveUntracked)?;
+            } else if p.is_dir() {
+                fs::remove_dir_all(p)
+                    .map_err(|_| GitError::RemoveUntracked)?;
+            }
+        }
 
         Ok(())
     }

@@ -135,7 +135,8 @@ fn build_manifest_path() -> PathBuf {
         author: "devnought",
     };
 
-    let root = app_dirs::get_app_root(AppDataType::UserCache, &APP_INFO).expect("Could not locate app settings directory");
+    let root = app_dirs::get_app_root(AppDataType::UserCache, &APP_INFO)
+        .expect("Could not locate app settings directory");
     let mut path = PathBuf::from(root);
     path.push("manifest.json");
 
@@ -166,9 +167,7 @@ fn checkout(repo: &GitRepo, branch: &str) -> Result<(), GitError> {
     repo.checkout(branch)?;
 
     println!("{}",
-             repo.path()
-                 .to_str()
-                 .expect("Could not unwrap repo path"));
+             repo.path().to_str().expect("Could not unwrap repo path"));
     println!("    {}", BrightCyan.paint(branch));
 
     Ok(())
@@ -180,6 +179,8 @@ fn reset(repo: &GitRepo) -> Result<(), GitError> {
         return Ok(());
     }
 
+    repo.remove_untracked()?;
+
     let head = repo.reset()?;
     let branch = BrightCyan.paint(head.name().expect("Error unwrapping head name"));
     let l_brace = BrightYellow.paint("[");
@@ -189,9 +190,7 @@ fn reset(repo: &GitRepo) -> Result<(), GitError> {
              l_brace,
              branch,
              r_brace,
-             repo.path()
-                 .to_str()
-                 .expect("Error unwrapping repo path"));
+             repo.path().to_str().expect("Error unwrapping repo path"));
 
     Ok(())
 }
@@ -204,9 +203,7 @@ fn status(repo: &GitRepo) -> Result<(), GitError> {
     }
 
     println!("{}",
-             repo.path()
-                 .to_str()
-                 .expect("Could not unwrap repo path"));
+             repo.path().to_str().expect("Could not unwrap repo path"));
 
     for entry in statuses.iter() {
         let (pre, colour) = match entry.status() {

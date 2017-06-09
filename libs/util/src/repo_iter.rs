@@ -34,7 +34,9 @@ impl Iterator for ExploratoryMode {
                         };
 
                         self.read_dir = Some(read_iterator);
-                        self.read_dir.as_mut().expect("This should have never failed")
+                        self.read_dir
+                            .as_mut()
+                            .expect("This should have never failed")
                     }
                 };
 

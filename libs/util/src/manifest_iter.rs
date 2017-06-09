@@ -6,14 +6,17 @@ use std::path::{Path, PathBuf};
 
 pub struct ManifestIterator<'a> {
     iter: Iter<'a, PathBuf>,
-    root: &'a Path
+    root: &'a Path,
 }
 
 impl<'a> ManifestIterator<'a> {
     pub fn new(data: &'a ManifestData) -> Self {
         let iter = data.repos();
         let root = data.root();
-        ManifestIterator { iter: iter.into_iter(), root: root }
+        ManifestIterator {
+            iter: iter.into_iter(),
+            root: root,
+        }
     }
 }
 
@@ -22,7 +25,9 @@ impl<'a> Iterator for ManifestIterator<'a> {
 
     fn next(&mut self) -> Option<Self::Item> {
         match self.iter.next().map(|x| self.root.join(x)) {
-            Some(p) => Some(GitRepo::new(p).expect("Failed unwrapping GitRepo in ManifestIterator")),
+            Some(p) => {
+                Some(GitRepo::new(p).expect("Failed unwrapping GitRepo in ManifestIterator"))
+            }
             None => None,
         }
     }
