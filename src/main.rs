@@ -167,7 +167,9 @@ fn checkout(repo: &GitRepo, branch: &str) -> Result<(), GitError> {
     repo.checkout(branch)?;
 
     println!("{}",
-             repo.path().to_str().expect("Could not unwrap repo path"));
+             repo.path()
+                 .to_str()
+                 .expect("Could not unwrap repo path"));
     println!("    {}", BrightCyan.paint(branch));
 
     Ok(())
@@ -190,7 +192,9 @@ fn reset(repo: &GitRepo) -> Result<(), GitError> {
              l_brace,
              branch,
              r_brace,
-             repo.path().to_str().expect("Error unwrapping repo path"));
+             repo.path()
+                 .to_str()
+                 .expect("Error unwrapping repo path"));
 
     Ok(())
 }
@@ -203,7 +207,9 @@ fn status(repo: &GitRepo) -> Result<(), GitError> {
     }
 
     println!("{}",
-             repo.path().to_str().expect("Could not unwrap repo path"));
+             repo.path()
+                 .to_str()
+                 .expect("Could not unwrap repo path"));
 
     for entry in statuses.iter() {
         let (pre, colour) = match entry.status() {

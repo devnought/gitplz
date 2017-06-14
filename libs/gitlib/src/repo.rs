@@ -110,13 +110,16 @@ impl GitRepo {
         // TODO: Finish this nonsense
         for entry in iter {
             let p = self.path
-                .join(entry.path().expect("Invalid file path in remove_untracked"));
+                .join(entry
+                          .path()
+                          .expect("Invalid file path in remove_untracked"));
 
             // The whole file/directory distinction might be useless.
             // If a untracked file is removed from an untracked directory, should also
             // remove now empty directory?
             if p.is_file() {
-                fs::remove_file(p).map_err(|_| GitError::RemoveUntracked)?;
+                fs::remove_file(p)
+                    .map_err(|_| GitError::RemoveUntracked)?;
             } else if p.is_dir() {
                 fs::remove_dir_all(p)
                     .map_err(|_| GitError::RemoveUntracked)?;
