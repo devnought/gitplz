@@ -1,6 +1,7 @@
 extern crate app_dirs;
 #[macro_use]
 extern crate clap;
+extern crate indicatif;
 extern crate num_cpus;
 extern crate term_painter;
 extern crate threadpool;
@@ -14,6 +15,7 @@ use std::path::{Path, PathBuf};
 use std::sync::mpsc::channel;
 
 use app_dirs::{AppInfo, AppDataType};
+use indicatif::{ProgressBar, ProgressStyle};
 use term_painter::Color::{BrightRed, BrightCyan, BrightGreen, BrightMagenta, BrightYellow};
 use term_painter::ToStyle;
 use threadpool::ThreadPool;
@@ -99,6 +101,8 @@ fn process(option: RunOption, path: &Path) {
     let (tx, rx) = channel();
     let mut repo_count = 0;
 
+    let pb = ProgressBar::new_spinner();
+
     for repo in repos {
         let tx = tx.clone();
         let option = option.clone();
@@ -124,9 +128,18 @@ fn process(option: RunOption, path: &Path) {
         repo_count += 1;
     }
 
-    let completed = rx.iter().take(repo_count).sum::<usize>();
+    //let completed = rx.iter().take(repo_count).sum::<usize>();
 
-    assert_eq!(completed, repo_count);
+    let mut completed = 0;
+
+    for v in rx.iter().take(repo_count) {
+        pb.inc(v);
+        completed += v;
+    }
+
+    pb.finish_with_message("Done");
+
+    assert_eq!(completed as usize, repo_count);
 }
 
 fn build_manifest_path() -> PathBuf {

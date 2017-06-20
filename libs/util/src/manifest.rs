@@ -106,6 +106,10 @@ impl<'a> Manifest<'a> {
         self.data.repos().is_empty()
     }
 
+    pub fn len(&self) -> usize {
+        self.data.repos().len()
+    }
+
     fn get_file(&self) -> File {
         let manifest_dir = self.path.parent().unwrap();
 
