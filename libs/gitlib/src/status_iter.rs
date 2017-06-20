@@ -6,7 +6,7 @@ pub struct GitStatusIter<'a> {
 
 impl<'a> GitStatusIter<'a> {
     pub fn new(statuses: &'a git2::Statuses) -> Self {
-        GitStatusIter { statuses: Some(statuses.iter()) }
+        Self { statuses: Some(statuses.iter()) }
     }
 }
 

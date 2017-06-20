@@ -6,7 +6,7 @@ pub struct GitStatuses<'a> {
 
 impl<'a> GitStatuses<'a> {
     pub fn new(statuses: git2::Statuses<'a>) -> Self {
-        GitStatuses { statuses: statuses }
+        Self { statuses: statuses }
     }
 
     pub fn len(&self) -> usize {

@@ -6,7 +6,7 @@ pub struct GitReference<'a> {
 
 impl<'a> GitReference<'a> {
     pub fn new(reference: git2::Reference<'a>) -> Self {
-        GitReference { reference: reference }
+        Self { reference: reference }
     }
 
     pub fn name(&self) -> Option<&str> {

@@ -17,7 +17,7 @@ impl GitRepo {
         let repo = git2::Repository::open(path_ref)
             .map_err(|_| GitError::OpenRepo)?;
 
-        Ok(GitRepo {
+        Ok(Self {
                repo: repo,
                path: path_ref.to_owned(),
            })

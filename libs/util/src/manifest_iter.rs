@@ -13,7 +13,8 @@ impl<'a> ManifestIterator<'a> {
     pub fn new(data: &'a ManifestData) -> Self {
         let iter = data.repos();
         let root = data.root();
-        ManifestIterator {
+
+        Self {
             iter: iter.into_iter(),
             root: root,
         }

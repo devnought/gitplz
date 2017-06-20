@@ -16,7 +16,7 @@ pub struct ManifestData {
 
 impl ManifestData {
     fn empty(path: &Path) -> Self {
-        ManifestData {
+        Self {
             repositories: BTreeSet::new(),
             root_path: path.to_path_buf(),
         }
@@ -74,7 +74,7 @@ impl<'a> Manifest<'a> {
             }
         };
 
-        Manifest {
+        Self {
             data: manifest_data,
             path: manifest_path_ref,
         }

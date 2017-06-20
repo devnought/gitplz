@@ -24,7 +24,7 @@ pub struct GitStatusEntry<'a> {
 
 impl<'a> GitStatusEntry<'a> {
     pub fn new(entry: git2::StatusEntry<'a>) -> Self {
-        GitStatusEntry { entry: entry }
+        Self { entry: entry }
     }
 
     pub fn path(&self) -> Option<&str> {

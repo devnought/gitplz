@@ -120,13 +120,13 @@ impl<'a> GitRepositories<'a> {
             pending: vec![path_ref.to_owned()],
         };
 
-        GitRepositories { mode: RepoMode::Exploratory(exp) }
+        Self { mode: RepoMode::Exploratory(exp) }
     }
 
     pub fn from_manifest(manifest: &'a Manifest) -> Self {
         let man = ManifestMode { iter: manifest.repos() };
 
-        GitRepositories { mode: RepoMode::Manifest(man) }
+        Self { mode: RepoMode::Manifest(man) }
     }
 }
 
