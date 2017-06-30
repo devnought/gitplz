@@ -105,39 +105,66 @@ fn process(option: RunOption, path: &Path) {
 
     for repo in repos {
         let tx = tx.clone();
-        let option = option.clone();
 
         pool.execute(move || {
-            let result = match option {
-                RunOption::Checkout(ref branch) => checkout(&repo, branch),
-                RunOption::Reset => reset(&repo),
-                RunOption::Status => status(&repo),
-                _ => {
-                    tx.send(1).expect("Could not signal main thread");
-                    panic!("Unhandled run option");
+            let statuses = match repo.statuses() {
+                Ok(s) => s,
+                Err(_) => {
+                    tx.send(None).expect("Could not signal main thread");
+                    return;
                 }
             };
 
-            if let Err(e) = result {
-                println!("Error in process: {:?} => {:?}", repo.path(), e);
+            if statuses.len() == 0 {
+                tx.send(None).expect("Could not signal main thread");
+                return;
             }
 
-            tx.send(1).expect("Could not signal main thread");
+            let statuses_result = statuses.iter().collect::<Vec<_>>();
+
+            tx.send(Some((repo.path().to_path_buf(), statuses_result)))
+                .expect("Could not signal main thread");
         });
 
         repo_count += 1;
     }
 
-    //let completed = rx.iter().take(repo_count).sum::<usize>();
-
     let mut completed = 0;
 
-    for v in rx.iter().take(repo_count) {
-        pb.inc(v);
-        completed += v;
-    }
+    for tuple in rx.iter().take(repo_count) {
+        completed += 1;
 
-    pb.finish_with_message("Done");
+        if let None = tuple {
+            continue;
+        }
+
+        let (path, list) = tuple.unwrap();
+
+        println!("{}", path.to_str().unwrap());
+
+        for entry in list {
+            let (pre, colour) = match *entry.status() {
+                FileStatus::Conflicted => ("       Conflicted", BrightMagenta),
+                FileStatus::Current => ("          Current", BrightMagenta),
+                FileStatus::Deleted => ("          Deleted", BrightRed),
+                FileStatus::Ignored => ("          Ignored", BrightMagenta),
+                FileStatus::StagedNew => ("       Staged New", BrightMagenta),
+                FileStatus::StagedModified => ("  Staged Modified", BrightMagenta),
+                FileStatus::StagedDeleted => ("   Staged Deleted", BrightMagenta),
+                FileStatus::StagedRenamed => ("   Staged Renamed", BrightMagenta),
+                FileStatus::StagedTypechange => ("Staged Typechange", BrightMagenta),
+                FileStatus::Modified => ("         Modified", BrightCyan),
+                FileStatus::New => ("              New", BrightGreen),
+                FileStatus::Renamed => ("          Renamed", BrightCyan),
+                FileStatus::Typechange => ("       Typechange", BrightCyan),
+                FileStatus::Unknown => ("          Unknown", BrightMagenta),
+            };
+
+            println!("  {} {}",
+                     colour.paint(pre),
+                     entry.path().expect("Could not unwrap entry path"));
+        }
+    }
 
     assert_eq!(completed as usize, repo_count);
 }
@@ -212,6 +239,7 @@ fn reset(repo: &GitRepo) -> Result<(), GitError> {
     Ok(())
 }
 
+/*
 fn status(repo: &GitRepo) -> Result<(), GitError> {
     let statuses = repo.statuses()?;
 
@@ -249,3 +277,4 @@ fn status(repo: &GitRepo) -> Result<(), GitError> {
 
     Ok(())
 }
+*/

@@ -11,7 +11,7 @@ impl<'a> GitStatusIter<'a> {
 }
 
 impl<'a> Iterator for GitStatusIter<'a> {
-    type Item = GitStatusEntry<'a>;
+    type Item = GitStatusEntry;
 
     fn next(&mut self) -> Option<Self::Item> {
         match self.statuses.as_mut() {

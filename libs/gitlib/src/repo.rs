@@ -102,7 +102,7 @@ impl GitRepo {
         let statuses = self.statuses()?;
         let iter = statuses
             .iter()
-            .filter(|x| match x.status() {
+            .filter(|x| match *x.status() {
                         FileStatus::New => true,
                         _ => false,
                     });

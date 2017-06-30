@@ -18,21 +18,14 @@ pub enum FileStatus {
     Unknown,
 }
 
-pub struct GitStatusEntry<'a> {
-    entry: git2::StatusEntry<'a>,
+pub struct GitStatusEntry {
+    path: String,
+    status: FileStatus,
 }
 
-impl<'a> GitStatusEntry<'a> {
-    pub fn new(entry: git2::StatusEntry<'a>) -> Self {
-        Self { entry: entry }
-    }
-
-    pub fn path(&self) -> Option<&str> {
-        self.entry.path()
-    }
-
-    pub fn status(&self) -> FileStatus {
-        match self.entry.status() {
+impl GitStatusEntry {
+    pub fn new(entry: git2::StatusEntry) -> Self {
+        let status = match entry.status() {
             git2::STATUS_CONFLICTED => FileStatus::Conflicted,
             git2::STATUS_CURRENT => FileStatus::Current,
             git2::STATUS_IGNORED => FileStatus::Ignored,
@@ -50,6 +43,19 @@ impl<'a> GitStatusEntry<'a> {
             git2::STATUS_WT_TYPECHANGE => FileStatus::Typechange,
 
             _ => FileStatus::Unknown,
+        };
+
+        Self {
+            path: entry.path().unwrap().to_string(),
+            status: status,
         }
+    }
+
+    pub fn path(&self) -> Option<&str> {
+        Some(&self.path)
+    }
+
+    pub fn status(&self) -> &FileStatus {
+        &self.status
     }
 }
