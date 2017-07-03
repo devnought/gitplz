@@ -1,4 +1,5 @@
 use git2;
+use std::path::{PathBuf, Path};
 
 #[derive(Debug)]
 pub enum FileStatus {
@@ -19,7 +20,7 @@ pub enum FileStatus {
 }
 
 pub struct GitStatusEntry {
-    path: String,
+    path: PathBuf,
     status: FileStatus,
 }
 
@@ -45,14 +46,19 @@ impl GitStatusEntry {
             _ => FileStatus::Unknown,
         };
 
+        let path = match entry.path() {
+            Some(p) => PathBuf::from(p),
+            None => PathBuf::new()
+        };
+
         Self {
-            path: entry.path().unwrap().to_string(),
+            path: path,
             status: status,
         }
     }
 
-    pub fn path(&self) -> Option<&str> {
-        Some(&self.path)
+    pub fn path(&self) -> &Path {
+        &self.path
     }
 
     pub fn status(&self) -> &FileStatus {

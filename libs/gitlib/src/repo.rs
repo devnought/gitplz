@@ -109,10 +109,7 @@ impl GitRepo {
 
         // TODO: Finish this nonsense
         for entry in iter {
-            let p = self.path
-                .join(entry
-                          .path()
-                          .expect("Invalid file path in remove_untracked"));
+            let p = self.path.join(entry.path());
 
             // The whole file/directory distinction might be useless.
             // If a untracked file is removed from an untracked directory, should also

@@ -131,8 +131,13 @@ fn process(option: RunOption, path: &Path) {
 
     let mut completed = 0;
 
-    for tuple in rx.iter().take(repo_count) {
+    while repo_count > completed {
         completed += 1;
+
+        let tuple = match rx.recv() {
+            Ok(t) => t,
+            Err(_) => break,
+        };
 
         if let None = tuple {
             continue;
@@ -160,13 +165,11 @@ fn process(option: RunOption, path: &Path) {
                 FileStatus::Unknown => ("          Unknown", BrightMagenta),
             };
 
-            println!("  {} {}",
-                     colour.paint(pre),
-                     entry.path().expect("Could not unwrap entry path"));
+            println!("  {} {}", colour.paint(pre), entry.path().display());
         }
     }
 
-    assert_eq!(completed as usize, repo_count);
+    assert_eq!(completed, repo_count);
 }
 
 fn build_manifest_path() -> PathBuf {
