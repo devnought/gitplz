@@ -12,7 +12,7 @@ extern crate util;
 use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::sync::mpsc::channel;
+use std::sync::mpsc::{channel, Receiver};
 
 use app_dirs::{AppInfo, AppDataType};
 use indicatif::{ProgressBar, ProgressStyle};
@@ -20,7 +20,7 @@ use term_painter::Color::{BrightRed, BrightCyan, BrightGreen, BrightMagenta, Bri
 use term_painter::ToStyle;
 use threadpool::ThreadPool;
 
-use gitlib::{FileStatus, GitError, GitRepo};
+use gitlib::{FileStatus, GitError, GitRepo, GitStatusEntry};
 use util::{GitRepositories, Manifest};
 
 mod cli;
@@ -90,6 +90,7 @@ fn process(option: RunOption, path: &Path) {
             ManifestOption::Preview => manifest_preview(repos),
             ManifestOption::Update => manifest_update(repos, &mut manifest),
         }
+
         return;
     }
 
@@ -100,13 +101,48 @@ fn process(option: RunOption, path: &Path) {
 
     let thread_count = num_cpus::get();
     let pool = ThreadPool::new(thread_count);
-
-
     let pb = ProgressBar::new_spinner();
 
     match option {
-        RunOption::Reset => reset(repos, pool),
-        RunOption::Status => status(repos, pool),
+        RunOption::Reset => {
+            let rx = reset(repos, pool);
+
+            while let Ok((path, head)) = rx.recv() {
+                let branch = BrightCyan.paint(head);
+                let l_brace = BrightYellow.paint("[");
+                let r_brace = BrightYellow.paint("]");
+
+                println!("  {}{}{}  {}", l_brace, branch, r_brace, path.display());
+            }
+        }
+        RunOption::Status => {
+            let rx = status(repos, pool);
+
+            while let Ok((path, list)) = rx.recv() {
+                println!("{}", path.display());
+
+                for entry in list {
+                    let (pre, colour) = match *entry.status() {
+                        FileStatus::Conflicted => ("       Conflicted", BrightMagenta),
+                        FileStatus::Current => ("          Current", BrightMagenta),
+                        FileStatus::Deleted => ("          Deleted", BrightRed),
+                        FileStatus::Ignored => ("          Ignored", BrightMagenta),
+                        FileStatus::StagedNew => ("       Staged New", BrightMagenta),
+                        FileStatus::StagedModified => ("  Staged Modified", BrightMagenta),
+                        FileStatus::StagedDeleted => ("   Staged Deleted", BrightMagenta),
+                        FileStatus::StagedRenamed => ("   Staged Renamed", BrightMagenta),
+                        FileStatus::StagedTypechange => ("Staged Typechange", BrightMagenta),
+                        FileStatus::Modified => ("         Modified", BrightCyan),
+                        FileStatus::New => ("              New", BrightGreen),
+                        FileStatus::Renamed => ("          Renamed", BrightCyan),
+                        FileStatus::Typechange => ("       Typechange", BrightCyan),
+                        FileStatus::Unknown => ("          Unknown", BrightMagenta),
+                    };
+
+                    println!("  {} {}", colour.paint(pre), entry.path().display());
+                }
+            }
+        }
         _ => panic!("Unhandled run option"),
     }
 }
@@ -157,19 +193,16 @@ fn checkout(repo: &GitRepo, branch: &str) -> Result<(), GitError> {
     Ok(())
 }
 
-fn reset(repos: GitRepositories, pool: ThreadPool) {
+fn reset(repos: GitRepositories, pool: ThreadPool) -> Receiver<(PathBuf, String)> {
     let (tx, rx) = channel();
-    let mut repo_count = 0;
 
     for repo in repos {
         let tx = tx.clone();
-        repo_count += 1;
 
         pool.execute(move || {
             match repo.statuses() {
                 Ok(s) => {
                     if s.len() == 0 {
-                        tx.send(None).expect(THREAD_SIGNAL);
                         return;
                     }
                 }
@@ -177,119 +210,44 @@ fn reset(repos: GitRepositories, pool: ThreadPool) {
             }
 
             match repo.remove_untracked() {
-                Err(_) => {
-                    tx.send(None).expect(THREAD_SIGNAL);
-                    return;
-                }
+                Err(_) => return,
                 _ => (),
             }
 
             let head = match repo.reset() {
                 Ok(r) => r,
-                _ => {
-                    tx.send(None).expect(THREAD_SIGNAL);
-                    return;
-                }
+                _ => return,
             };
 
             let tuple = (repo.path().to_path_buf(), head.name().to_string());
-            tx.send(Some(tuple)).expect(THREAD_SIGNAL);
+            tx.send(tuple).expect(THREAD_SIGNAL);
         });
     }
 
-    let mut completed = 0;
-
-    while repo_count > completed {
-        completed += 1;
-
-        let tuple = match rx.recv() {
-            Ok(h) => h,
-            Err(_) => break,
-        };
-
-        if let None = tuple {
-            continue;
-        }
-
-        let (path, head) = tuple.unwrap();
-
-        let branch = BrightCyan.paint(head);
-        let l_brace = BrightYellow.paint("[");
-        let r_brace = BrightYellow.paint("]");
-
-        println!("  {}{}{}  {}", l_brace, branch, r_brace, path.display());
-    }
-
-    assert_eq!(completed, repo_count);
+    rx
 }
 
-fn status(repos: GitRepositories, pool: ThreadPool) {
+fn status(repos: GitRepositories, pool: ThreadPool) -> Receiver<(PathBuf, Vec<GitStatusEntry>)> {
     let (tx, rx) = channel();
-    let mut repo_count = 0;
 
     for repo in repos {
         let tx = tx.clone();
-        repo_count += 1;
 
         pool.execute(move || {
             let statuses = match repo.statuses() {
                 Ok(s) => s,
-                Err(_) => {
-                    tx.send(None).expect(THREAD_SIGNAL);
-                    return;
-                }
+                Err(_) => return,
             };
 
             if statuses.len() == 0 {
-                tx.send(None).expect(THREAD_SIGNAL);
                 return;
             }
 
             let statuses_result = statuses.iter().collect::<Vec<_>>();
             let tuple = (repo.path().to_path_buf(), statuses_result);
-            tx.send(Some(tuple)).expect(THREAD_SIGNAL);
+            tx.send(tuple).expect(THREAD_SIGNAL);
         });
     }
 
-    let mut completed = 0;
-
-    while repo_count > completed {
-        completed += 1;
-
-        let tuple = match rx.recv() {
-            Ok(t) => t,
-            Err(_) => break,
-        };
-
-        if let None = tuple {
-            continue;
-        }
-
-        let (path, list) = tuple.unwrap();
-
-        println!("{}", path.display());
-
-        for entry in list {
-            let (pre, colour) = match *entry.status() {
-                FileStatus::Conflicted => ("       Conflicted", BrightMagenta),
-                FileStatus::Current => ("          Current", BrightMagenta),
-                FileStatus::Deleted => ("          Deleted", BrightRed),
-                FileStatus::Ignored => ("          Ignored", BrightMagenta),
-                FileStatus::StagedNew => ("       Staged New", BrightMagenta),
-                FileStatus::StagedModified => ("  Staged Modified", BrightMagenta),
-                FileStatus::StagedDeleted => ("   Staged Deleted", BrightMagenta),
-                FileStatus::StagedRenamed => ("   Staged Renamed", BrightMagenta),
-                FileStatus::StagedTypechange => ("Staged Typechange", BrightMagenta),
-                FileStatus::Modified => ("         Modified", BrightCyan),
-                FileStatus::New => ("              New", BrightGreen),
-                FileStatus::Renamed => ("          Renamed", BrightCyan),
-                FileStatus::Typechange => ("       Typechange", BrightCyan),
-                FileStatus::Unknown => ("          Unknown", BrightMagenta),
-            };
-
-            println!("  {} {}", colour.paint(pre), entry.path().display());
-        }
-    }
-
-    assert_eq!(completed, repo_count);
+    rx
 }
