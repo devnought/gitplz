@@ -11,9 +11,15 @@ use util::GitRepositories;
 
 const THREAD_SIGNAL: &str = "Could not signal main thread";
 
+struct StatusData {
+    path: PathBuf,
+    list: Vec<GitStatusEntry>,
+    index: usize,
+}
+
 enum StatusResult {
     Empty(usize),
-    Data((PathBuf, Vec<GitStatusEntry>, usize)),
+    Data(StatusData),
 }
 
 pub fn process_status(repos: GitRepositories, pool: ThreadPool) {
@@ -23,8 +29,8 @@ pub fn process_status(repos: GitRepositories, pool: ThreadPool) {
     let mut next_index = 0;
 
     while let Ok(result) = rx.recv() {
-        let (path, list, index) = match result {
-            StatusResult::Data(t) => t,
+        let data = match result {
+            StatusResult::Data(d) => d,
             StatusResult::Empty(i) => {
                 if i == next_index {
                     next_index = process_queue(&mut queue, next_index + 1);
@@ -35,12 +41,12 @@ pub fn process_status(repos: GitRepositories, pool: ThreadPool) {
             }
         };
 
-        if next_index != index {
-            queue.insert(index, Some((path, list)));
+        if next_index != data.index {
+            queue.insert(data.index, Some((data.path, data.list)));
             continue;
         }
 
-        print_status(path, list);
+        print_status(data.path, data.list);
 
         // If there are adjacent items in the queue, process them.
         next_index = process_queue(&mut queue, next_index + 1);
@@ -67,6 +73,40 @@ fn process_queue(queue: &mut BTreeMap<usize, Option<(PathBuf, Vec<GitStatusEntry
     next_index
 }
 
+fn repo_status(repos: GitRepositories, pool: ThreadPool) -> Receiver<StatusResult> {
+    let (tx, rx) = channel();
+
+    for (index, repo) in repos.enumerate() {
+        let tx = tx.clone();
+
+        pool.execute(move || {
+            let statuses = match repo.statuses() {
+                Ok(s) => s,
+                Err(_) => {
+                    tx.send(StatusResult::Empty(index)).expect(THREAD_SIGNAL);
+                    return;
+                }
+            };
+
+            if statuses.len() == 0 {
+                tx.send(StatusResult::Empty(index)).expect(THREAD_SIGNAL);
+                return;
+            }
+
+            let statuses_result = statuses.iter().collect::<Vec<_>>();
+            let data = StatusData {
+                path: repo.path().to_path_buf(),
+                list: statuses_result,
+                index: index,
+            };
+
+            tx.send(StatusResult::Data(data)).expect(THREAD_SIGNAL);
+        });
+    }
+
+    rx
+}
+
 fn print_status(path: PathBuf, list: Vec<GitStatusEntry>) {
     println!("{}", path.display());
 
@@ -90,33 +130,4 @@ fn print_status(path: PathBuf, list: Vec<GitStatusEntry>) {
 
         println!("  {} {}", colour.paint(pre), entry.path().display());
     }
-}
-
-fn repo_status(repos: GitRepositories, pool: ThreadPool) -> Receiver<StatusResult> {
-    let (tx, rx) = channel();
-
-    for (index, repo) in repos.enumerate() {
-        let tx = tx.clone();
-
-        pool.execute(move || {
-            let statuses = match repo.statuses() {
-                Ok(s) => s,
-                Err(_) => {
-                    tx.send(StatusResult::Empty(index)).expect(THREAD_SIGNAL);
-                    return;
-                }
-            };
-
-            if statuses.len() == 0 {
-                tx.send(StatusResult::Empty(index)).expect(THREAD_SIGNAL);
-                return;
-            }
-
-            let statuses_result = statuses.iter().collect::<Vec<_>>();
-            let tuple = (repo.path().to_path_buf(), statuses_result, index);
-            tx.send(StatusResult::Data(tuple)).expect(THREAD_SIGNAL);
-        });
-    }
-
-    rx
 }
