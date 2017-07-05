@@ -1,7 +1,7 @@
 extern crate app_dirs;
 #[macro_use]
 extern crate clap;
-extern crate indicatif;
+//extern crate indicatif;
 extern crate num_cpus;
 extern crate term_painter;
 extern crate threadpool;
@@ -15,15 +15,16 @@ use std::path::{Path, PathBuf};
 use std::sync::mpsc::{channel, Receiver};
 
 use app_dirs::{AppInfo, AppDataType};
-use indicatif::{ProgressBar, ProgressStyle};
-use term_painter::Color::{BrightRed, BrightCyan, BrightGreen, BrightMagenta, BrightYellow};
+//use indicatif::{ProgressBar, ProgressStyle};
+use term_painter::Color::{BrightCyan, BrightYellow};
 use term_painter::ToStyle;
 use threadpool::ThreadPool;
 
-use gitlib::{FileStatus, GitError, GitRepo, GitStatusEntry};
+use gitlib::{GitError, GitRepo};
 use util::{GitRepositories, Manifest};
 
 mod cli;
+mod status;
 
 const THREAD_SIGNAL: &str = "Could not signal main thread";
 
@@ -99,9 +100,10 @@ fn process(option: RunOption, path: &Path) {
         false => GitRepositories::from_manifest(&manifest),
     };
 
-    let thread_count = num_cpus::get();
-    let pool = ThreadPool::new(thread_count);
-    let pb = ProgressBar::new_spinner();
+    let pool = {
+        let thread_count = num_cpus::get();
+        ThreadPool::new(thread_count)
+    };
 
     match option {
         RunOption::Reset => {
@@ -115,34 +117,7 @@ fn process(option: RunOption, path: &Path) {
                 println!("  {}{}{}  {}", l_brace, branch, r_brace, path.display());
             }
         }
-        RunOption::Status => {
-            let rx = status(repos, pool);
-
-            while let Ok((path, list)) = rx.recv() {
-                println!("{}", path.display());
-
-                for entry in list {
-                    let (pre, colour) = match *entry.status() {
-                        FileStatus::Conflicted => ("       Conflicted", BrightMagenta),
-                        FileStatus::Current => ("          Current", BrightMagenta),
-                        FileStatus::Deleted => ("          Deleted", BrightRed),
-                        FileStatus::Ignored => ("          Ignored", BrightMagenta),
-                        FileStatus::StagedNew => ("       Staged New", BrightMagenta),
-                        FileStatus::StagedModified => ("  Staged Modified", BrightMagenta),
-                        FileStatus::StagedDeleted => ("   Staged Deleted", BrightMagenta),
-                        FileStatus::StagedRenamed => ("   Staged Renamed", BrightMagenta),
-                        FileStatus::StagedTypechange => ("Staged Typechange", BrightMagenta),
-                        FileStatus::Modified => ("         Modified", BrightCyan),
-                        FileStatus::New => ("              New", BrightGreen),
-                        FileStatus::Renamed => ("          Renamed", BrightCyan),
-                        FileStatus::Typechange => ("       Typechange", BrightCyan),
-                        FileStatus::Unknown => ("          Unknown", BrightMagenta),
-                    };
-
-                    println!("  {} {}", colour.paint(pre), entry.path().display());
-                }
-            }
-        }
+        RunOption::Status => status::process_status(repos, pool),
         _ => panic!("Unhandled run option"),
     }
 }
@@ -220,31 +195,6 @@ fn reset(repos: GitRepositories, pool: ThreadPool) -> Receiver<(PathBuf, String)
             };
 
             let tuple = (repo.path().to_path_buf(), head.name().to_string());
-            tx.send(tuple).expect(THREAD_SIGNAL);
-        });
-    }
-
-    rx
-}
-
-fn status(repos: GitRepositories, pool: ThreadPool) -> Receiver<(PathBuf, Vec<GitStatusEntry>)> {
-    let (tx, rx) = channel();
-
-    for repo in repos {
-        let tx = tx.clone();
-
-        pool.execute(move || {
-            let statuses = match repo.statuses() {
-                Ok(s) => s,
-                Err(_) => return,
-            };
-
-            if statuses.len() == 0 {
-                return;
-            }
-
-            let statuses_result = statuses.iter().collect::<Vec<_>>();
-            let tuple = (repo.path().to_path_buf(), statuses_result);
             tx.send(tuple).expect(THREAD_SIGNAL);
         });
     }

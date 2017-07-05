@@ -7,10 +7,10 @@ authors = ["Kyle Gretchev <kgretchev@gmail.com>"]
 app_dirs = "1.1.1"
 clap = "2.25.0"
 #colored = "1.5.1"
-indicatif = "0.6.0"
+#indicatif = "0.6.0"
 num_cpus = "1.6.2"
 #pbr = "1.0.0"
-#rayon = "0.8.1"
+#rayon = "0.8.2"
 term-painter = "0.2.3"
 threadpool = "1.3.2"
 
