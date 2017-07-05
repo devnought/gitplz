@@ -84,12 +84,10 @@ fn process(option: RunOption, path: &Path) {
     let mut manifest = Manifest::open(&manifest_path, &path);
 
     if let RunOption::Manifest(ref m) = option {
-        let repos = GitRepositories::new(path);
-
         match *m {
             ManifestOption::Clean => manifest_clean(&manifest_path),
-            ManifestOption::Preview => manifest_preview(repos),
-            ManifestOption::Update => manifest_update(repos, &mut manifest),
+            ManifestOption::Preview => manifest_preview(path),
+            ManifestOption::Update => manifest_update(path, &mut manifest),
         }
 
         return;
@@ -136,33 +134,41 @@ fn build_manifest_path() -> PathBuf {
     path
 }
 
-fn manifest_update(repos: GitRepositories, manifest: &mut Manifest) {
+fn manifest_update<P>(path: P, manifest: &mut Manifest)
+    where P: AsRef<Path>
+{
+    let repos = GitRepositories::new(path);
+
     manifest.add_repositories(repos);
 
     println!("{:#?}", &manifest);
 }
 
-fn manifest_preview(repos: GitRepositories) {
+fn manifest_preview<P>(path: P)
+    where P: AsRef<Path>
+{
+    let repos = GitRepositories::new(path);
+
     for repo in repos {
-        println!("{}", repo.path().to_str().unwrap());
+        println!("{}", repo.path().display());
     }
 }
 
-fn manifest_clean(manifest_path: &Path) {
-    println!("Attempting to delete: {:?}", manifest_path);
+fn manifest_clean<P>(manifest_path: P)
+    where P: AsRef<Path>
+{
+    let manifest_path = manifest_path.as_ref();
+    println!("Attempting to delete: {}", manifest_path.display());
 
     if manifest_path.exists() {
-        fs::remove_file(manifest_path).unwrap()
+        fs::remove_file(manifest_path).expect("Could not delete manifest");
     }
 }
 
 fn checkout(repo: &GitRepo, branch: &str) -> Result<(), GitError> {
     repo.checkout(branch)?;
 
-    println!("{}",
-             repo.path()
-                 .to_str()
-                 .expect("Could not unwrap repo path"));
+    println!("{}", repo.path().display());
     println!("    {}", BrightCyan.paint(branch));
 
     Ok(())

@@ -113,7 +113,9 @@ pub struct GitRepositories<'a> {
 }
 
 impl<'a> GitRepositories<'a> {
-    pub fn new<P: AsRef<Path>>(path: P) -> Self {
+    pub fn new<P>(path: P) -> Self
+        where P: AsRef<Path>
+    {
         let path_ref = path.as_ref();
         let exp = ExploratoryMode {
             read_dir: None,
