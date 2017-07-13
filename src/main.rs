@@ -118,8 +118,6 @@ fn process(option: RunOption, path: &Path) {
         RunOption::Status => status::process_status(repos, &pool),
         _ => panic!("Unhandled run option"),
     }
-
-    pool.join();
 }
 
 fn build_manifest_path() -> PathBuf {
