@@ -105,7 +105,7 @@ fn process(option: RunOption, path: &Path) {
 
     match option {
         RunOption::Reset => {
-            let rx = reset(repos, pool);
+            let rx = reset(repos, &pool);
 
             while let Ok((path, head)) = rx.recv() {
                 let branch = BrightCyan.paint(head);
@@ -115,9 +115,11 @@ fn process(option: RunOption, path: &Path) {
                 println!("  {}{}{}  {}", l_brace, branch, r_brace, path.display());
             }
         }
-        RunOption::Status => status::process_status(repos, pool),
+        RunOption::Status => status::process_status(repos, &pool),
         _ => panic!("Unhandled run option"),
     }
+
+    pool.join();
 }
 
 fn build_manifest_path() -> PathBuf {
@@ -174,7 +176,7 @@ fn checkout(repo: &GitRepo, branch: &str) -> Result<(), GitError> {
     Ok(())
 }
 
-fn reset(repos: GitRepositories, pool: ThreadPool) -> Receiver<(PathBuf, String)> {
+fn reset(repos: GitRepositories, pool: &ThreadPool) -> Receiver<(PathBuf, String)> {
     let (tx, rx) = channel();
 
     for repo in repos {

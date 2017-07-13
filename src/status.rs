@@ -22,7 +22,7 @@ enum StatusResult {
     Data(StatusData),
 }
 
-pub fn process_status(repos: GitRepositories, pool: ThreadPool) {
+pub fn process_status(repos: GitRepositories, pool: &ThreadPool) {
     let rx = repo_status(repos, pool);
 
     let mut queue = BTreeMap::new();
@@ -73,7 +73,7 @@ fn process_queue(queue: &mut BTreeMap<usize, Option<(PathBuf, Vec<GitStatusEntry
     next_index
 }
 
-fn repo_status(repos: GitRepositories, pool: ThreadPool) -> Receiver<StatusResult> {
+fn repo_status(repos: GitRepositories, pool: &ThreadPool) -> Receiver<StatusResult> {
     let (tx, rx) = channel();
 
     for (index, repo) in repos.enumerate() {
