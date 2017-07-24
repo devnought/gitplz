@@ -16,7 +16,7 @@ use std::sync::mpsc::{channel, Receiver};
 
 use app_dirs::{AppInfo, AppDataType};
 //use indicatif::{ProgressBar, ProgressStyle};
-use term_painter::Color::{BrightCyan, BrightYellow};
+use term_painter::Color::{BrightCyan, BrightYellow, BrightWhite};
 use term_painter::ToStyle;
 use threadpool::ThreadPool;
 
@@ -116,6 +116,19 @@ fn process(option: RunOption, path: &Path) {
             }
         }
         RunOption::Status => status::process_status(repos, &pool),
+        RunOption::Checkout(branch) => {
+            match checkout(repos, &branch) {
+                Ok(branches) => {
+                    let ess = match branches {
+                        1 => "",
+                        _ => "s"
+                    };
+
+                    println!("Checkout finished, checked out branch on {} repo{}", branches, ess);
+                },
+                Err(msg) => println!("Checkout blew up, no checkout for you: {:#?}", msg),
+            }
+        }
         _ => panic!("Unhandled run option"),
     }
 }
@@ -165,13 +178,20 @@ fn manifest_clean<P>(manifest_path: P)
     }
 }
 
-fn checkout(repo: &GitRepo, branch: &str) -> Result<(), GitError> {
-    repo.checkout(branch)?;
+fn checkout(repos: GitRepositories, branch: &str) -> Result<(i32), GitError> {
+    let mut branches = 0;
+    
+    for repo in repos {
+        match repo.checkout(branch) {
+            Ok(()) => {branches = branches + 1},
+            Err(_) => continue
+        }
 
-    println!("{}", repo.path().display());
-    println!("    {}", BrightCyan.paint(branch));
+        println!("{}", BrightWhite.paint(repo.path().display()));
+        println!("    {}", BrightCyan.paint(branch));
+    }
 
-    Ok(())
+    Ok((branches))
 }
 
 fn reset(repos: GitRepositories, pool: &ThreadPool) -> Receiver<(PathBuf, String)> {
