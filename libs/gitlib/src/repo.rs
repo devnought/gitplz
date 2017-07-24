@@ -84,9 +84,23 @@ impl GitRepo {
             .peel(git2::ObjectType::Any)
             .map_err(|_| GitError::Checkout(GitBranch::from(branch_type)))?;
 
+        let mut opts = git2::build::CheckoutBuilder::new();
+
         self.repo
-            .checkout_tree(&obj, None)
+            .checkout_tree(&obj, Some(&mut opts))
             .map_err(|_| GitError::Checkout(GitBranch::from(branch_type)))?;
+
+        let mut split_branch = branch_name.split("/").last();
+
+        let branch_ref = match self.repo.find_reference("refs/heads/topic/STS-616") {
+            Ok(r) => r,
+            Err(e) => {
+                println!("{:#?}", e);
+                return Ok(());
+            }
+        };
+
+        self.repo.set_head(branch_ref.name().unwrap());
 
         println!("  {} {}",
                  match branch_type {
