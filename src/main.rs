@@ -1,8 +1,6 @@
 extern crate app_dirs;
 #[macro_use]
 extern crate clap;
-//extern crate indicatif;
-extern crate num_cpus;
 extern crate term_painter;
 extern crate threadpool;
 
@@ -15,12 +13,11 @@ use std::path::{Path, PathBuf};
 use std::sync::mpsc::{channel, Receiver};
 
 use app_dirs::{AppInfo, AppDataType};
-//use indicatif::{ProgressBar, ProgressStyle};
 use term_painter::Color::{BrightCyan, BrightYellow, BrightWhite};
 use term_painter::ToStyle;
 use threadpool::ThreadPool;
 
-use gitlib::{GitError, GitRepo};
+use gitlib::GitError;
 use util::{GitRepositories, Manifest};
 
 mod cli;
@@ -63,7 +60,7 @@ fn main() {
             }
         }
         Some(cli::CMD_COMPLETIONS) => {
-            if let Some(ref matches) = matches.subcommand_matches(cli::CMD_COMPLETIONS) {
+            if let Some(matches) = matches.subcommand_matches(cli::CMD_COMPLETIONS) {
                 let shell = value_t!(matches, cli::SHELL, clap::Shell).unwrap();
                 cli::build_cli().gen_completions_to(cli::APP_NAME, shell, &mut std::io::stdout());
             }
@@ -93,15 +90,13 @@ fn process(option: RunOption, path: &Path) {
         return;
     }
 
-    let repos = match manifest.is_empty() {
-        true => GitRepositories::new(path),
-        false => GitRepositories::from_manifest(&manifest),
+    let repos = if manifest.is_empty() {
+        GitRepositories::new(path)
+    } else {
+        GitRepositories::from_manifest(&manifest)
     };
 
-    let pool = {
-        let thread_count = num_cpus::get();
-        ThreadPool::new(thread_count)
-    };
+    let pool = threadpool::Builder::new().build();
 
     match option {
         RunOption::Reset => {
@@ -121,11 +116,13 @@ fn process(option: RunOption, path: &Path) {
                 Ok(branches) => {
                     let ess = match branches {
                         1 => "",
-                        _ => "s"
+                        _ => "s",
                     };
 
-                    println!("Checkout finished, checked out branch on {} repo{}", branches, ess);
-                },
+                    println!("Checkout finished, checked out branch on {} repo{}",
+                             branches,
+                             ess);
+                }
                 Err(msg) => println!("Checkout blew up, no checkout for you: {:#?}", msg),
             }
         }
@@ -139,12 +136,11 @@ fn build_manifest_path() -> PathBuf {
         author: "devnought",
     };
 
-    let root = app_dirs::get_app_root(AppDataType::UserCache, &APP_INFO)
+    let mut root = app_dirs::get_app_root(AppDataType::UserCache, &APP_INFO)
         .expect("Could not locate app settings directory");
-    let mut path = PathBuf::from(root);
-    path.push("manifest.json");
 
-    path
+    root.push("manifest.json");
+    root
 }
 
 fn manifest_update<P>(path: P, manifest: &mut Manifest)
@@ -180,18 +176,18 @@ fn manifest_clean<P>(manifest_path: P)
 
 fn checkout(repos: GitRepositories, branch: &str) -> Result<(i32), GitError> {
     let mut branches = 0;
-    
+
     for repo in repos {
         match repo.checkout(branch) {
-            Ok(()) => {branches = branches + 1},
-            Err(_) => continue
+            Ok(()) => branches += 1,
+            Err(_) => continue,
         }
 
         println!("{}", BrightWhite.paint(repo.path().display()));
         println!("    {}", BrightCyan.paint(branch));
     }
 
-    Ok((branches))
+    Ok(branches)
 }
 
 fn reset(repos: GitRepositories, pool: &ThreadPool) -> Receiver<(PathBuf, String)> {
@@ -201,18 +197,14 @@ fn reset(repos: GitRepositories, pool: &ThreadPool) -> Receiver<(PathBuf, String
         let tx = tx.clone();
 
         pool.execute(move || {
-            match repo.statuses() {
-                Ok(s) => {
-                    if s.len() == 0 {
-                        return;
-                    }
+            if let Ok(s) = repo.statuses() {
+                if s.len() == 0 {
+                    return;
                 }
-                _ => (),
             }
 
-            match repo.remove_untracked() {
-                Err(_) => return,
-                _ => (),
+            if repo.remove_untracked().is_err() {
+                return;
             }
 
             let head = match repo.reset() {

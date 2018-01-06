@@ -52,7 +52,7 @@ impl GitRepo {
             .map_err(|_| GitError::Reset)?;
 
         let mut builder = git2::build::CheckoutBuilder::new();
-        let mut options = builder
+        let options = builder
             .remove_untracked(true) // this is ignored for a reset :()
             .progress(|path, a, b| {
                           if path == None {
@@ -90,8 +90,6 @@ impl GitRepo {
             .checkout_tree(&obj, Some(&mut opts))
             .map_err(|_| GitError::Checkout(GitBranch::from(branch_type)))?;
 
-        let mut split_branch = branch_name.split("/").last();
-
         let branch_ref = match self.repo.find_reference("refs/heads/topic/STS-616") {
             Ok(r) => r,
             Err(e) => {
@@ -100,7 +98,9 @@ impl GitRepo {
             }
         };
 
-        self.repo.set_head(branch_ref.name().unwrap());
+        self.repo
+            .set_head(branch_ref.name().unwrap())
+            .expect("Error setting head");
 
         println!("  {} {}",
                  match branch_type {

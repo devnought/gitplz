@@ -7,12 +7,12 @@ authors = ["Kyle Gretchev <kgretchev@gmail.com>"]
 
 [dependencies]
 app_dirs = "1.1.1"
-clap = "2.25.0"
+clap = "2.29.0"
 #indicatif = "0.6.0"
-num_cpus = "1.6.2"
 #pbr = "1.0.0"
-term-painter = "0.2.3"
-threadpool = "1.4.0"
+term-painter = "0.2.4"
+#termcolor = "0.3.3"
+threadpool = "1.7.1"
 
 gitlib = { path = "./libs/gitlib" }
 util = { path = "./libs/util" }

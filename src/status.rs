@@ -1,5 +1,5 @@
 use std::collections::BTreeMap;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::mpsc::{channel, Receiver};
 
 use term_painter::Color::{BrightRed, BrightCyan, BrightGreen, BrightMagenta};
@@ -46,7 +46,7 @@ pub fn process_status(repos: GitRepositories, pool: &ThreadPool) {
             continue;
         }
 
-        print_status(data.path, data.list);
+        print_status(&data.path, data.list);
 
         // If there are adjacent items in the queue, process them.
         next_index = process_queue(&mut queue, next_index + 1);
@@ -64,7 +64,7 @@ fn process_queue(queue: &mut BTreeMap<usize, Option<(PathBuf, Vec<GitStatusEntry
 
     while let Some(opt) = queue.remove(&next_index) {
         if let Some((path, list)) = opt {
-            print_status(path, list);
+            print_status(&path, list);
         }
 
         next_index += 1;
@@ -107,7 +107,7 @@ fn repo_status(repos: GitRepositories, pool: &ThreadPool) -> Receiver<StatusResu
     rx
 }
 
-fn print_status(path: PathBuf, list: Vec<GitStatusEntry>) {
+fn print_status(path: &Path, list: Vec<GitStatusEntry>) {
     println!("{}", path.display());
 
     for entry in list {
