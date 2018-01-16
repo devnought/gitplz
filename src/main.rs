@@ -69,8 +69,13 @@ fn main() {
         }
         Some(cli::CMD_RESET) => RunOption::Reset,
 
-        // By default, just show status.
-        _ => RunOption::Status,
+        // By default, show help.
+        _ => {
+            cli::build_cli()
+                .print_help()
+                .expect("Could not print command line help message");
+            return;
+        }
     };
 
     process(option, &working_dir);
