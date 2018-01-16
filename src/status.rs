@@ -128,6 +128,6 @@ fn print_status(path: &Path, list: Vec<GitStatusEntry>) {
             FileStatus::Unknown => ("          Unknown", BrightMagenta),
         };
 
-        println!("  {} {}", colour.paint(pre), entry.path().display());
+        println!(" {} {}", colour.paint(pre), entry.path().display());
     }
 }

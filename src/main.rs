@@ -68,6 +68,7 @@ fn main() {
             return;
         }
         Some(cli::CMD_RESET) => RunOption::Reset,
+        Some(cli::CMD_STATUS) => RunOption::Status,
 
         // By default, show help.
         _ => {
