@@ -6,7 +6,7 @@ authors = ["Kyle Gretchev <kgretchev@gmail.com>"]
 [workspace]
 
 [dependencies]
-app_dirs = "1.1.1"
+#app_dirs = "1.1.1"
 clap = "2.29.2"
 #indicatif = "0.6.0"
 #pbr = "1.0.0"

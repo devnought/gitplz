@@ -66,7 +66,7 @@ impl GitRepo {
             .reset(&obj, git2::ResetType::Hard, Some(options))
             .map_err(|_| GitError::Reset)?;
 
-        Ok(GitReference::new(head))
+        Ok(GitReference::new(&head))
     }
 
     pub fn checkout(&self, branch_name: &str) -> Result<(), GitError> {

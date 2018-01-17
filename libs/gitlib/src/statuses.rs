@@ -13,6 +13,10 @@ impl<'a> GitStatuses<'a> {
         self.statuses.len()
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.statuses.len() == 0
+    }
+
     pub fn iter(&self) -> GitStatusIter {
         GitStatusIter::new(&self.statuses)
     }

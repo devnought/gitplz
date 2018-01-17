@@ -15,7 +15,11 @@ impl<'a> Iterator for GitStatusIter<'a> {
 
     fn next(&mut self) -> Option<Self::Item> {
         match self.statuses.as_mut() {
-            Some(statuses) => statuses.next().map(GitStatusEntry::new),
+            Some(statuses) => if let Some(s) = statuses.next() {
+                Some(GitStatusEntry::new(&s))
+            } else {
+                None
+            },
             None => None,
         }
     }

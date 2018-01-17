@@ -25,7 +25,7 @@ pub struct GitStatusEntry {
 }
 
 impl GitStatusEntry {
-    pub fn new(entry: git2::StatusEntry) -> Self {
+    pub fn new(entry: &git2::StatusEntry) -> Self {
         let status = match entry.status() {
             git2::STATUS_CONFLICTED => FileStatus::Conflicted,
             git2::STATUS_CURRENT => FileStatus::Current,

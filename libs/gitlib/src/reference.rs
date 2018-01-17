@@ -5,7 +5,7 @@ pub struct GitReference {
 }
 
 impl GitReference {
-    pub fn new(reference: git2::Reference) -> Self {
+    pub fn new(reference: &git2::Reference) -> Self {
         let name = match reference.name() {
             Some(n) => String::from(n),
             None => String::new()

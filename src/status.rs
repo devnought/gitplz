@@ -88,7 +88,7 @@ fn repo_status(repos: GitRepositories, pool: &ThreadPool) -> Receiver<StatusResu
                 }
             };
 
-            if statuses.len() == 0 {
+            if statuses.is_empty() {
                 tx.send(StatusResult::Empty(index)).expect(THREAD_SIGNAL);
                 return;
             }

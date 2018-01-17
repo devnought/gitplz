@@ -1,4 +1,3 @@
-extern crate app_dirs;
 #[macro_use]
 extern crate clap;
 extern crate term_painter;
@@ -8,17 +7,15 @@ extern crate gitlib;
 extern crate util;
 
 use std::env;
-use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::mpsc::{channel, Receiver};
 
-use app_dirs::{AppInfo, AppDataType};
 use term_painter::Color::{BrightCyan, BrightYellow, BrightWhite};
 use term_painter::ToStyle;
 use threadpool::ThreadPool;
 
 use gitlib::GitError;
-use util::{GitRepositories, Manifest};
+use util::GitRepositories;
 
 mod cli;
 mod status;
@@ -28,16 +25,8 @@ const THREAD_SIGNAL: &str = "Could not signal main thread";
 #[derive(Debug, Clone)]
 enum RunOption {
     Checkout(String),
-    Manifest(ManifestOption),
     Reset,
     Status,
-}
-
-#[derive(Debug, Clone)]
-enum ManifestOption {
-    Clean,
-    Preview,
-    Update,
 }
 
 fn main() {
@@ -49,15 +38,6 @@ fn main() {
             let branch_match = matches.subcommand_matches(cli::CMD_CHECKOUT).unwrap();
             let branch = value_t!(branch_match, cli::BRANCH, String).unwrap();
             RunOption::Checkout(branch)
-        }
-        Some(cli::CMD_MANIFEST) => {
-            let matches = matches.subcommand_matches(cli::CMD_MANIFEST).unwrap();
-
-            match matches.subcommand_name() {
-                Some(cli::CMD_CLEAN) => RunOption::Manifest(ManifestOption::Clean),
-                Some(cli::CMD_UPDATE) => RunOption::Manifest(ManifestOption::Update),
-                _ => RunOption::Manifest(ManifestOption::Preview),
-            }
         }
         Some(cli::CMD_COMPLETIONS) => {
             if let Some(matches) = matches.subcommand_matches(cli::CMD_COMPLETIONS) {
@@ -83,25 +63,7 @@ fn main() {
 }
 
 fn process(option: RunOption, path: &Path) {
-    let manifest_path = build_manifest_path();
-    let mut manifest = Manifest::open(&manifest_path, &path);
-
-    if let RunOption::Manifest(ref m) = option {
-        match *m {
-            ManifestOption::Clean => manifest_clean(&manifest_path),
-            ManifestOption::Preview => manifest_preview(path),
-            ManifestOption::Update => manifest_update(path, &mut manifest),
-        }
-
-        return;
-    }
-
-    let repos = if manifest.is_empty() {
-        GitRepositories::new(path)
-    } else {
-        GitRepositories::from_manifest(&manifest)
-    };
-
+    let repos = GitRepositories::new(path);
     let pool = threadpool::Builder::new().build();
 
     match option {
@@ -132,51 +94,6 @@ fn process(option: RunOption, path: &Path) {
                 Err(msg) => println!("Checkout blew up, no checkout for you: {:#?}", msg),
             }
         }
-        _ => panic!("Unhandled run option"),
-    }
-}
-
-fn build_manifest_path() -> PathBuf {
-    const APP_INFO: AppInfo = AppInfo {
-        name: "git-plz",
-        author: "devnought",
-    };
-
-    let mut root = app_dirs::get_app_root(AppDataType::UserCache, &APP_INFO)
-        .expect("Could not locate app settings directory");
-
-    root.push("manifest.json");
-    root
-}
-
-fn manifest_update<P>(path: P, manifest: &mut Manifest)
-    where P: AsRef<Path>
-{
-    let repos = GitRepositories::new(path);
-
-    manifest.add_repositories(repos);
-
-    println!("{:#?}", &manifest);
-}
-
-fn manifest_preview<P>(path: P)
-    where P: AsRef<Path>
-{
-    let repos = GitRepositories::new(path);
-
-    for repo in repos {
-        println!("{}", repo.path().display());
-    }
-}
-
-fn manifest_clean<P>(manifest_path: P)
-    where P: AsRef<Path>
-{
-    let manifest_path = manifest_path.as_ref();
-    println!("Attempting to delete: {}", manifest_path.display());
-
-    if manifest_path.exists() {
-        fs::remove_file(manifest_path).expect("Could not delete manifest");
     }
 }
 
@@ -204,7 +121,7 @@ fn reset(repos: GitRepositories, pool: &ThreadPool) -> Receiver<(PathBuf, String
 
         pool.execute(move || {
             if let Ok(s) = repo.statuses() {
-                if s.len() == 0 {
+                if s.is_empty() {
                     return;
                 }
             }
