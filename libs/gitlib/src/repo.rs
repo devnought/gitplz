@@ -90,11 +90,13 @@ impl GitRepo {
             .checkout_tree(&obj, Some(&mut opts))
             .map_err(|_| GitError::Checkout(GitBranch::from(branch_type)))?;
 
-        let branch_ref = match self.repo.find_reference("refs/heads/topic/STS-616") {
+        let branch_str = format!("refs/heads/{}", branch_name);
+        println!("- checking out '{}'", &branch_str);
+        let branch_ref = match self.repo.find_reference(&branch_str) {
             Ok(r) => r,
             Err(e) => {
-                println!("{:#?}", e);
-                return Ok(());
+                println!("- checkout error: {}", e.message());
+                return Err(GitError::Checkout(GitBranch::from(branch_type)));
             }
         };
 
@@ -102,7 +104,7 @@ impl GitRepo {
             .set_head(branch_ref.name().unwrap())
             .expect("Error setting head");
 
-        println!("  {} {}",
+        println!(" {} {}",
                  match branch_type {
                      git2::BranchType::Local => " [Local]",
                      git2::BranchType::Remote => "[Remote]",

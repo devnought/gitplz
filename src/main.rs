@@ -103,11 +103,14 @@ fn checkout(repos: GitRepositories, branch: &str) -> Result<(i32), GitError> {
     for repo in repos {
         match repo.checkout(branch) {
             Ok(()) => branches += 1,
-            Err(_) => continue,
+            Err(_) => {
+                //println!("Error checking out branch '{}': {:?}", branch, e);
+                continue;
+            },
         }
 
-        println!("{}", BrightWhite.paint(repo.path().display()));
-        println!("    {}", BrightCyan.paint(branch));
+        println!(" {}", BrightWhite.paint(repo.path().display()));
+        println!("     {}", BrightCyan.paint(branch));
     }
 
     Ok(branches)
