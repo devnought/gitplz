@@ -81,8 +81,10 @@ impl GitRepo {
 
         let obj = branch
             .get()
-            .peel(git2::ObjectType::Any)
+            .peel(git2::ObjectType::Commit)
             .map_err(|_| GitError::Checkout(GitBranch::from(branch_type)))?;
+
+        println!("{:?}", &obj);
 
         let mut opts = git2::build::CheckoutBuilder::new();
 
