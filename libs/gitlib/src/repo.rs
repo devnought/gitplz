@@ -89,6 +89,18 @@ impl GitRepo {
         match branch_type {
             git2::BranchType::Local => (),
             git2::BranchType::Remote => {
+                let head_id = self.repo
+                    .head()
+                    .expect("Could not resolve head")
+                    .peel(git2::ObjectType::Any)
+                    .expect("Could not get head ref")
+                    .id();
+
+                if head_id == obj.id() {
+                    println!("bailing out");
+                    return Ok(());
+                }
+
                 self.repo.set_head_detached(obj.id()).expect("wut");
                 self.repo
                     .reset(&obj, git2::ResetType::Hard, None)
