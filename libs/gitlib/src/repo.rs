@@ -84,7 +84,20 @@ impl GitRepo {
             .peel(git2::ObjectType::Commit)
             .map_err(|_| GitError::Checkout(GitBranch::from(branch_type)))?;
 
-        println!("{:?}", &obj);
+        // This needs to get non-hacky.
+        // Should only set head and reset if not already pointing to head.
+        match branch_type {
+            git2::BranchType::Local => (),
+            git2::BranchType::Remote => {
+                self.repo.set_head_detached(obj.id()).expect("wut");
+                self.repo
+                    .reset(&obj, git2::ResetType::Hard, None)
+                    .expect("wuufttttt");
+                //let branch_str = "refs/heads/topic/ARTC-233";
+                //self.repo.set_head(&branch_str).expect("wut");
+                return Ok(());
+            }
+        }
 
         let mut opts = git2::build::CheckoutBuilder::new();
 
