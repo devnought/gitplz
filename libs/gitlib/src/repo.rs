@@ -84,35 +84,18 @@ impl GitRepo {
             .peel(git2::ObjectType::Commit)
             .map_err(|_| GitError::Checkout(GitBranch::from(branch_type)))?;
 
-        // This needs to get non-hacky.
-        // Should only set head and reset if not already pointing to head.
-        if branch_type == git2::BranchType::Remote {
-            let head_id = self.repo
-                .head()
-                .expect("Could not resolve head")
-                .peel(git2::ObjectType::Any)
-                .expect("Could not get head ref")
-                .id();
-
-            if head_id == obj.id() {
-                //println!("bailing out");
-                return Ok(false);
-            }
-
-            self.repo.set_head_detached(obj.id()).expect("wut");
-            self.repo
-                .reset(&obj, git2::ResetType::Hard, None)
-                .expect("wuufttttt");
-            //let branch_str = "refs/heads/topic/ARTC-233";
-            //self.repo.set_head(&branch_str).expect("wut");
-            return Ok(true);
+        match branch_type {
+            git2::BranchType::Local => self.checkout_local(branch_name, &obj),
+            git2::BranchType::Remote => self.checkout_remote(&obj)
         }
+    }
 
+    fn checkout_local(&self, branch_name: &str, obj: &git2::Object) -> Result<bool, GitError> {
         let mut opts = git2::build::CheckoutBuilder::new();
 
         self.repo
             .checkout_tree(&obj, Some(&mut opts))
-            .map_err(|_| GitError::Checkout(GitBranch::from(branch_type)))?;
+            .map_err(|_| GitError::Checkout(GitBranch::from(git2::BranchType::Local)))?;
 
         let branch_str = format!("refs/heads/{}", branch_name);
         //println!("- checking out '{}'", &branch_str);
@@ -120,7 +103,7 @@ impl GitRepo {
             Ok(r) => r,
             Err(e) => {
                 println!("- checkout error: {}", e.message());
-                return Err(GitError::Checkout(GitBranch::from(branch_type)));
+                return Err(GitError::Checkout(GitBranch::from(git2::BranchType::Local)));
             }
         };
 
@@ -128,6 +111,28 @@ impl GitRepo {
             .set_head(branch_ref.name().unwrap())
             .expect("Error setting head");
 
+        Ok(true)
+    }
+
+    fn checkout_remote(&self, obj: &git2::Object) -> Result<bool, GitError> {
+        let head_id = self.repo
+            .head()
+            .expect("Could not resolve head")
+            .peel(git2::ObjectType::Any)
+            .expect("Could not get head ref")
+            .id();
+
+        if head_id == obj.id() {
+            //println!("bailing out");
+            return Ok(false);
+        }
+
+        self.repo.set_head_detached(obj.id()).expect("wut");
+        self.repo
+            .reset(&obj, git2::ResetType::Hard, None)
+            .expect("wuufttttt");
+        //let branch_str = "refs/heads/topic/ARTC-233";
+        //self.repo.set_head(&branch_str).expect("wut");
         Ok(true)
     }
 
