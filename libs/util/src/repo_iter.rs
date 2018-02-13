@@ -38,7 +38,7 @@ impl Iterator for ExploratoryMode {
                     }
                 };
 
-                while let Some(dir_entry) = iter.next() {
+                for dir_entry in iter {
                     let entry = match dir_entry {
                         Ok(d) => d,
                         Err(_) => continue,

@@ -69,7 +69,7 @@ impl GitRepo {
         Ok(GitReference::new(&head))
     }
 
-    pub fn checkout(&self, branch_name: &str) -> Result<(), GitError> {
+    pub fn checkout(&self, branch_name: &str) -> Result<bool, GitError> {
         let branch_type = match branch_name.find("origin/") {
             Some(_) => git2::BranchType::Remote,
             None => git2::BranchType::Local,
@@ -86,29 +86,26 @@ impl GitRepo {
 
         // This needs to get non-hacky.
         // Should only set head and reset if not already pointing to head.
-        match branch_type {
-            git2::BranchType::Local => (),
-            git2::BranchType::Remote => {
-                let head_id = self.repo
-                    .head()
-                    .expect("Could not resolve head")
-                    .peel(git2::ObjectType::Any)
-                    .expect("Could not get head ref")
-                    .id();
+        if branch_type == git2::BranchType::Remote {
+            let head_id = self.repo
+                .head()
+                .expect("Could not resolve head")
+                .peel(git2::ObjectType::Any)
+                .expect("Could not get head ref")
+                .id();
 
-                if head_id == obj.id() {
-                    println!("bailing out");
-                    return Ok(());
-                }
-
-                self.repo.set_head_detached(obj.id()).expect("wut");
-                self.repo
-                    .reset(&obj, git2::ResetType::Hard, None)
-                    .expect("wuufttttt");
-                //let branch_str = "refs/heads/topic/ARTC-233";
-                //self.repo.set_head(&branch_str).expect("wut");
-                return Ok(());
+            if head_id == obj.id() {
+                //println!("bailing out");
+                return Ok(false);
             }
+
+            self.repo.set_head_detached(obj.id()).expect("wut");
+            self.repo
+                .reset(&obj, git2::ResetType::Hard, None)
+                .expect("wuufttttt");
+            //let branch_str = "refs/heads/topic/ARTC-233";
+            //self.repo.set_head(&branch_str).expect("wut");
+            return Ok(true);
         }
 
         let mut opts = git2::build::CheckoutBuilder::new();
@@ -118,7 +115,7 @@ impl GitRepo {
             .map_err(|_| GitError::Checkout(GitBranch::from(branch_type)))?;
 
         let branch_str = format!("refs/heads/{}", branch_name);
-        println!("- checking out '{}'", &branch_str);
+        //println!("- checking out '{}'", &branch_str);
         let branch_ref = match self.repo.find_reference(&branch_str) {
             Ok(r) => r,
             Err(e) => {
@@ -131,14 +128,7 @@ impl GitRepo {
             .set_head(branch_ref.name().unwrap())
             .expect("Error setting head");
 
-        println!(" {} {}",
-                 match branch_type {
-                     git2::BranchType::Local => " [Local]",
-                     git2::BranchType::Remote => "[Remote]",
-                 },
-                 branch_name);
-
-        Ok(())
+        Ok(true)
     }
 
     pub fn remove_untracked(&self) -> Result<(), GitError> {

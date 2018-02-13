@@ -102,9 +102,10 @@ fn checkout(repos: GitRepositories, branch: &str) -> Result<(i32), GitError> {
 
     for repo in repos {
         match repo.checkout(branch) {
-            Ok(()) => branches += 1,
+            Ok(true) => branches += 1,
+            Ok(false) => continue,
             Err(_) => {
-                //println!("Error checking out branch '{}': {:?}", branch, e);
+                //println!("{}: Error checking out branch '{}': {:?}", repo.path().display(), branch, e);
                 continue;
             },
         }
