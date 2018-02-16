@@ -7,7 +7,7 @@ authors = ["Kyle Gretchev <kgretchev@gmail.com>"]
 
 [dependencies]
 #app_dirs = "1.1.1"
-clap = "2.29.4"
+clap = "2.30.0"
 #indicatif = "0.6.0"
 #pbr = "1.0.0"
 term-painter = "0.2.4"
