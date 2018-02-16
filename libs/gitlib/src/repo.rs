@@ -1,7 +1,7 @@
 use std::path::{Path, PathBuf};
 use std::fs;
 
-use super::{git2, GitStatuses, GitError, GitReference, GitBranch, FileStatus};
+use super::{FileStatus, GitBranch, GitError, GitReference, GitStatuses, git2};
 
 pub struct GitRepo {
     repo: git2::Repository,
@@ -14,13 +14,12 @@ unsafe impl Sync for GitRepo {}
 impl GitRepo {
     pub fn new<P: AsRef<Path>>(path: P) -> Result<Self, GitError> {
         let path_ref = path.as_ref();
-        let repo = git2::Repository::open(path_ref)
-            .map_err(|_| GitError::OpenRepo)?;
+        let repo = git2::Repository::open(path_ref).map_err(|_| GitError::OpenRepo)?;
 
         Ok(Self {
-               repo: repo,
-               path: path_ref.to_owned(),
-           })
+            repo: repo,
+            path: path_ref.to_owned(),
+        })
     }
 
     pub fn path(&self) -> &Path {
@@ -86,7 +85,7 @@ impl GitRepo {
 
         match branch_type {
             git2::BranchType::Local => self.checkout_local(branch_name, &obj),
-            git2::BranchType::Remote => self.checkout_remote(&obj)
+            git2::BranchType::Remote => self.checkout_remote(&obj),
         }
     }
 
@@ -94,7 +93,7 @@ impl GitRepo {
         let mut opts = git2::build::CheckoutBuilder::new();
 
         self.repo
-            .checkout_tree(&obj, Some(&mut opts))
+            .checkout_tree(obj, Some(&mut opts))
             .map_err(|_| GitError::Checkout(GitBranch::from(git2::BranchType::Local)))?;
 
         let branch_str = format!("refs/heads/{}", branch_name);
@@ -129,7 +128,7 @@ impl GitRepo {
 
         self.repo.set_head_detached(obj.id()).expect("wut");
         self.repo
-            .reset(&obj, git2::ResetType::Hard, None)
+            .reset(obj, git2::ResetType::Hard, None)
             .expect("wuufttttt");
         //let branch_str = "refs/heads/topic/ARTC-233";
         //self.repo.set_head(&branch_str).expect("wut");
@@ -138,12 +137,10 @@ impl GitRepo {
 
     pub fn remove_untracked(&self) -> Result<(), GitError> {
         let statuses = self.statuses()?;
-        let iter = statuses
-            .iter()
-            .filter(|x| match *x.status() {
-                        FileStatus::New => true,
-                        _ => false,
-                    });
+        let iter = statuses.iter().filter(|x| match *x.status() {
+            FileStatus::New => true,
+            _ => false,
+        });
 
         // TODO: Finish this nonsense
         for entry in iter {
@@ -153,11 +150,9 @@ impl GitRepo {
             // If a untracked file is removed from an untracked directory, should also
             // remove now empty directory?
             if p.is_file() {
-                fs::remove_file(p)
-                    .map_err(|_| GitError::RemoveUntracked)?;
+                fs::remove_file(p).map_err(|_| GitError::RemoveUntracked)?;
             } else if p.is_dir() {
-                fs::remove_dir_all(p)
-                    .map_err(|_| GitError::RemoveUntracked)?;
+                fs::remove_dir_all(p).map_err(|_| GitError::RemoveUntracked)?;
             }
         }
 

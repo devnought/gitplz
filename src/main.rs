@@ -10,7 +10,7 @@ use std::env;
 use std::path::{Path, PathBuf};
 use std::sync::mpsc::{channel, Receiver};
 
-use term_painter::Color::{BrightCyan, BrightYellow, BrightWhite};
+use term_painter::Color::{BrightCyan, BrightWhite, BrightYellow};
 use term_painter::ToStyle;
 use threadpool::ThreadPool;
 
@@ -79,21 +79,20 @@ fn process(option: RunOption, path: &Path) {
             }
         }
         RunOption::Status => status::process_status(repos, &pool),
-        RunOption::Checkout(branch) => {
-            match checkout(repos, &branch) {
-                Ok(branches) => {
-                    let ess = match branches {
-                        1 => "",
-                        _ => "s",
-                    };
+        RunOption::Checkout(branch) => match checkout(repos, &branch) {
+            Ok(branches) => {
+                let ess = match branches {
+                    1 => "",
+                    _ => "s",
+                };
 
-                    println!("Checkout finished, checked out branch on {} repo{}",
-                             branches,
-                             ess);
-                }
-                Err(msg) => println!("Checkout blew up, no checkout for you: {:#?}", msg),
+                println!(
+                    "Checkout finished, checked out branch on {} repo{}",
+                    branches, ess
+                );
             }
-        }
+            Err(msg) => println!("Checkout blew up, no checkout for you: {:#?}", msg),
+        },
     }
 }
 
@@ -107,7 +106,7 @@ fn checkout(repos: GitRepositories, branch: &str) -> Result<(i32), GitError> {
             Err(_) => {
                 //println!("{}: Error checking out branch '{}': {:?}", repo.path().display(), branch, e);
                 continue;
-            },
+            }
         }
 
         println!(" {}", BrightWhite.paint(repo.path().display()));

@@ -32,7 +32,7 @@ mod repo;
 pub use repo::GitRepo;
 
 mod status_entry;
-pub use status_entry::{GitStatusEntry, FileStatus};
+pub use status_entry::{FileStatus, GitStatusEntry};
 
 mod status_iter;
 pub use status_iter::GitStatusIter;

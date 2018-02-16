@@ -1,4 +1,4 @@
-use super::{git2, GitStatusEntry};
+use super::{GitStatusEntry, git2};
 
 pub struct GitStatusIter<'a> {
     statuses: Option<git2::StatusIter<'a>>,
@@ -6,7 +6,9 @@ pub struct GitStatusIter<'a> {
 
 impl<'a> GitStatusIter<'a> {
     pub fn new(statuses: &'a git2::Statuses) -> Self {
-        Self { statuses: Some(statuses.iter()) }
+        Self {
+            statuses: Some(statuses.iter()),
+        }
     }
 }
 

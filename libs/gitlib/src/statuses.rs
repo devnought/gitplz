@@ -1,4 +1,4 @@
-use super::{git2, GitStatusIter};
+use super::{GitStatusIter, git2};
 
 pub struct GitStatuses<'a> {
     statuses: git2::Statuses<'a>,

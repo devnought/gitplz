@@ -2,7 +2,7 @@ use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use std::sync::mpsc::{channel, Receiver};
 
-use term_painter::Color::{BrightRed, BrightCyan, BrightGreen, BrightMagenta};
+use term_painter::Color::{BrightCyan, BrightGreen, BrightMagenta, BrightRed};
 use term_painter::ToStyle;
 use threadpool::ThreadPool;
 
@@ -57,9 +57,10 @@ pub fn process_status(repos: GitRepositories, pool: &ThreadPool) {
     }
 }
 
-fn process_queue(queue: &mut BTreeMap<usize, Option<(PathBuf, Vec<GitStatusEntry>)>>,
-                 index: usize)
-                 -> usize {
+fn process_queue(
+    queue: &mut BTreeMap<usize, Option<(PathBuf, Vec<GitStatusEntry>)>>,
+    index: usize,
+) -> usize {
     let mut next_index = index;
 
     while let Some(opt) = queue.remove(&next_index) {

@@ -1,4 +1,4 @@
-use gitlib::{GitRepo, GitError};
+use gitlib::{GitError, GitRepo};
 
 use std::fs::ReadDir;
 use std::path::{Path, PathBuf};
@@ -56,16 +56,14 @@ impl Iterator for ExploratoryMode {
                     let path = entry.path();
 
                     match path.file_name() {
-                        Some(name) => {
-                            match name.to_str() {
-                                Some(name_str) => {
-                                    if name_str.starts_with('.') || name_str.starts_with('$') {
-                                        continue;
-                                    }
+                        Some(name) => match name.to_str() {
+                            Some(name_str) => {
+                                if name_str.starts_with('.') || name_str.starts_with('$') {
+                                    continue;
                                 }
-                                None => continue,
                             }
-                        }
+                            None => continue,
+                        },
                         None => continue,
                     };
 
@@ -95,7 +93,8 @@ pub struct GitRepositories {
 
 impl GitRepositories {
     pub fn new<P>(path: P) -> Self
-        where P: AsRef<Path>
+    where
+        P: AsRef<Path>,
     {
         let path_ref = path.as_ref();
         let exp = ExploratoryMode {
