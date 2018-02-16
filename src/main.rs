@@ -14,11 +14,11 @@ use term_painter::Color::{BrightCyan, BrightWhite, BrightYellow};
 use term_painter::ToStyle;
 use threadpool::ThreadPool;
 
-use gitlib::GitError;
 use util::GitRepositories;
 
 mod cli;
 mod status;
+mod checkout;
 
 const THREAD_SIGNAL: &str = "Could not signal main thread";
 
@@ -79,7 +79,7 @@ fn process(option: RunOption, path: &Path) {
             }
         }
         RunOption::Status => status::process_status(repos, &pool),
-        RunOption::Checkout(branch) => match checkout(repos, &branch) {
+        RunOption::Checkout(branch) => match checkout::process_checkout(repos, &branch, &pool) {
             Ok(branches) => {
                 let ess = match branches {
                     1 => "",
@@ -94,26 +94,6 @@ fn process(option: RunOption, path: &Path) {
             Err(msg) => println!("Checkout blew up, no checkout for you: {:#?}", msg),
         },
     }
-}
-
-fn checkout(repos: GitRepositories, branch: &str) -> Result<(i32), GitError> {
-    let mut branches = 0;
-
-    for repo in repos {
-        match repo.checkout(branch) {
-            Ok(true) => branches += 1,
-            Ok(false) => continue,
-            Err(_) => {
-                //println!("{}: Error checking out branch '{}': {:?}", repo.path().display(), branch, e);
-                continue;
-            }
-        }
-
-        println!(" {}", BrightWhite.paint(repo.path().display()));
-        println!("     {}", BrightCyan.paint(branch));
-    }
-
-    Ok(branches)
 }
 
 fn reset(repos: GitRepositories, pool: &ThreadPool) -> Receiver<(PathBuf, String)> {
