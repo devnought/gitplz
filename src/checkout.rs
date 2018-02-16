@@ -11,7 +11,11 @@ use util::GitRepositories;
 
 const THREAD_SIGNAL: &str = "Could not signal main thread";
 
-pub fn process_checkout(repos: GitRepositories, branch: &str, pool: &ThreadPool) -> Result<(i32), GitError> {
+pub fn process_checkout(
+    repos: GitRepositories,
+    branch: &str,
+    pool: &ThreadPool,
+) -> Result<(i32), GitError> {
     let mut branches = 0;
 
     for repo in repos {
@@ -30,3 +34,20 @@ pub fn process_checkout(repos: GitRepositories, branch: &str, pool: &ThreadPool)
 
     Ok(branches)
 }
+/*
+fn checkout(repos: GitRepositories, branch: &str, pool: &ThreadPool) -> Receiver<usize> {
+    for repo in repos {
+        match repo.checkout(branch) {
+            Ok(true) => branches += 1,
+            Ok(false) => continue,
+            Err(_) => {
+                //println!("{}: Error checking out branch '{}': {:?}", repo.path().display(), branch, e);
+                continue;
+            }
+        }
+
+        println!(" {}", BrightWhite.paint(repo.path().display()));
+        println!("     {}", BrightCyan.paint(branch));
+    }
+}
+*/
