@@ -13,6 +13,7 @@ clap = "2.30.0"
 term-painter = "0.2.4"
 #termcolor = "0.3.4"
 threadpool = "1.7.1"
+#walkdir = "2.1.4"
 
 gitlib = { path = "./libs/gitlib" }
 util = { path = "./libs/util" }
