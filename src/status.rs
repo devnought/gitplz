@@ -140,5 +140,3 @@ fn repo_status(
 
     rx
 }
-
-

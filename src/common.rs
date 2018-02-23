@@ -11,68 +11,23 @@ use util::GitRepositories;
 
 const THREAD_SIGNAL: &str = "Could not signal main thread";
 
-struct StatusData<T> {
+pub struct StatusData<T> {
     path: PathBuf,
     payload: T,
     index: usize,
 }
 
-enum StatusResult<T> {
+pub enum StatusResult<T> {
     Empty(usize),
     Data(StatusData<T>),
 }
 
-fn whatever_process(tx: Sender<StatusResult<Vec<GitStatusEntry>>>, index: usize, repo: GitRepo) {
-    let statuses = match repo.statuses() {
-        Ok(s) => s,
-        Err(_) => {
-            tx.send(StatusResult::Empty(index)).expect(THREAD_SIGNAL);
-            return;
-        }
-    };
-
-    if statuses.is_empty() {
-        tx.send(StatusResult::Empty(index)).expect(THREAD_SIGNAL);
-        return;
-    }
-
-    let statuses_result = statuses.iter().collect::<Vec<_>>();
-    let data = StatusData {
-        path: repo.path().to_path_buf(),
-        payload: statuses_result,
-        index: index,
-    };
-
-    tx.send(StatusResult::Data(data)).expect(THREAD_SIGNAL);
-}
-
-fn print_status(path: &Path, list: Vec<GitStatusEntry>) {
-    println!("{}", path.display());
-
-    for entry in list {
-        let (pre, colour) = match *entry.status() {
-            FileStatus::Conflicted => ("       Conflicted", BrightMagenta),
-            FileStatus::Current => ("          Current", BrightMagenta),
-            FileStatus::Deleted => ("          Deleted", BrightRed),
-            FileStatus::Ignored => ("          Ignored", BrightMagenta),
-            FileStatus::StagedNew => ("       Staged New", BrightMagenta),
-            FileStatus::StagedModified => ("  Staged Modified", BrightMagenta),
-            FileStatus::StagedDeleted => ("   Staged Deleted", BrightMagenta),
-            FileStatus::StagedRenamed => ("   Staged Renamed", BrightMagenta),
-            FileStatus::StagedTypechange => ("Staged Typechange", BrightMagenta),
-            FileStatus::Modified => ("         Modified", BrightCyan),
-            FileStatus::New => ("              New", BrightGreen),
-            FileStatus::Renamed => ("          Renamed", BrightCyan),
-            FileStatus::Typechange => ("       Typechange", BrightCyan),
-            FileStatus::Unknown => ("          Unknown", BrightMagenta),
-        };
-
-        println!(" {} {}", colour.paint(pre), entry.path().display());
-    }
-}
-
-pub fn process_status(repos: GitRepositories, pool: &ThreadPool) {
-    let rx = repo_status(repos, pool, whatever_process);
+pub fn process_repositories(
+    repos: GitRepositories,
+    pool: &ThreadPool,
+    action: fn(tx: Sender<StatusResult<Vec<GitStatusEntry>>>, index: usize, repo: GitRepo),
+) {
+    let rx = execute_on_thread(repos, pool, action);
 
     let mut queue = BTreeMap::new();
     let mut next_index = 0;
@@ -95,7 +50,8 @@ pub fn process_status(repos: GitRepositories, pool: &ThreadPool) {
             continue;
         }
 
-        print_status(&data.path, data.payload);
+        // TODO: Make this work
+        //print_status(&data.path, data.payload);
 
         // If there are adjacent items in the queue, process them.
         next_index = process_queue(&mut queue, next_index + 1);
@@ -114,7 +70,8 @@ fn process_queue(
 
     while let Some(opt) = queue.remove(&next_index) {
         if let Some((path, list)) = opt {
-            print_status(&path, list);
+            // TODO: Make this work
+            //print_status(&path, list);
         }
 
         next_index += 1;
@@ -123,7 +80,7 @@ fn process_queue(
     next_index
 }
 
-fn repo_status(
+fn execute_on_thread(
     repos: GitRepositories,
     pool: &ThreadPool,
     f: fn(Sender<StatusResult<Vec<GitStatusEntry>>>, usize, GitRepo),
@@ -140,5 +97,3 @@ fn repo_status(
 
     rx
 }
-
-
