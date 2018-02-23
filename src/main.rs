@@ -17,6 +17,7 @@ use threadpool::ThreadPool;
 use util::GitRepositories;
 
 mod cli;
+mod common;
 mod status;
 mod checkout;
 

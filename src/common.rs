@@ -72,7 +72,7 @@ fn print_status(path: &Path, list: Vec<GitStatusEntry>) {
 }
 
 pub fn process_status(repos: GitRepositories, pool: &ThreadPool) {
-    let rx = repo_status(repos, pool, whatever);
+    let rx = repo_status(repos, pool, whatever_process);
 
     let mut queue = BTreeMap::new();
     let mut next_index = 0;
