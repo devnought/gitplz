@@ -27,21 +27,21 @@ pub struct GitStatusEntry {
 impl GitStatusEntry {
     pub fn new(entry: &git2::StatusEntry) -> Self {
         let status = match entry.status() {
-            git2::STATUS_CONFLICTED => FileStatus::Conflicted,
-            git2::STATUS_CURRENT => FileStatus::Current,
-            git2::STATUS_IGNORED => FileStatus::Ignored,
+            git2::Status::CONFLICTED => FileStatus::Conflicted,
+            git2::Status::CURRENT => FileStatus::Current,
+            git2::Status::IGNORED => FileStatus::Ignored,
 
-            git2::STATUS_INDEX_NEW => FileStatus::StagedNew,
-            git2::STATUS_INDEX_MODIFIED => FileStatus::StagedModified,
-            git2::STATUS_INDEX_DELETED => FileStatus::StagedDeleted,
-            git2::STATUS_INDEX_RENAMED => FileStatus::StagedRenamed,
-            git2::STATUS_INDEX_TYPECHANGE => FileStatus::StagedTypechange,
+            git2::Status::INDEX_NEW => FileStatus::StagedNew,
+            git2::Status::INDEX_MODIFIED => FileStatus::StagedModified,
+            git2::Status::INDEX_DELETED => FileStatus::StagedDeleted,
+            git2::Status::INDEX_RENAMED => FileStatus::StagedRenamed,
+            git2::Status::INDEX_TYPECHANGE => FileStatus::StagedTypechange,
 
-            git2::STATUS_WT_DELETED => FileStatus::Deleted,
-            git2::STATUS_WT_MODIFIED => FileStatus::Modified,
-            git2::STATUS_WT_NEW => FileStatus::New,
-            git2::STATUS_WT_RENAMED => FileStatus::Renamed,
-            git2::STATUS_WT_TYPECHANGE => FileStatus::Typechange,
+            git2::Status::WT_DELETED => FileStatus::Deleted,
+            git2::Status::WT_MODIFIED => FileStatus::Modified,
+            git2::Status::WT_NEW => FileStatus::New,
+            git2::Status::WT_RENAMED => FileStatus::Renamed,
+            git2::Status::WT_TYPECHANGE => FileStatus::Typechange,
 
             _ => FileStatus::Unknown,
         };
