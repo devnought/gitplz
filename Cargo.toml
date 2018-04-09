@@ -6,14 +6,13 @@ authors = ["Kyle Gretchev <kgretchev@gmail.com>"]
 [workspace]
 
 [dependencies]
-#app_dirs = "1.1.1"
-clap = "2.30.0"
-#indicatif = "0.6.0"
-#pbr = "1.0.0"
-term-painter = "0.2.4"
-#termcolor = "0.3.4"
+atty = "0.2.8"
+termcolor = "0.3.6"
 threadpool = "1.7.1"
-#walkdir = "2.1.4"
-
 gitlib = { path = "./libs/gitlib" }
 util = { path = "./libs/util" }
+
+[dependencies.clap]
+version = "2.31.2"
+default-features = false
+features = [ "suggestions" ]

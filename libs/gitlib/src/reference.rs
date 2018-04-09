@@ -1,17 +1,17 @@
-use git2;
+use super::{Error, git2};
 
-pub struct GitReference {
+pub struct Reference {
     name: String,
 }
 
-impl GitReference {
-    pub fn new(reference: &git2::Reference) -> Self {
-        let name = match reference.name() {
-            Some(n) => String::from(n),
-            None => String::new(),
-        };
-
-        Self { name: name }
+impl Reference {
+    pub fn new(reference: &git2::Reference) -> Result<Self, Error> {
+        Ok(Self {
+            name: reference
+                .name()
+                .map(|x| x.into())
+                .ok_or(Error::InvalidUtf8)?,
+        })
     }
 
     pub fn name(&self) -> &str {

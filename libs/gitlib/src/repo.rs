@@ -1,34 +1,35 @@
+use super::{Error, Reference, Statuses, git2};
 use std::path::{Path, PathBuf};
-use std::fs;
-
-use super::{FileStatus, GitBranch, GitError, GitReference, GitStatuses, git2};
 
 pub struct GitRepo {
-    repo: git2::Repository,
     path: PathBuf,
+    repo: git2::Repository,
 }
 
 unsafe impl Send for GitRepo {}
-unsafe impl Sync for GitRepo {}
 
 impl GitRepo {
-    pub fn new<P: AsRef<Path>>(path: P) -> Result<Self, GitError> {
-        let path_ref = path.as_ref();
-        let repo = git2::Repository::open(path_ref).map_err(|_| GitError::OpenRepo)?;
+    pub fn open<P>(path: P) -> Result<Self, Error>
+    where
+        P: Into<PathBuf>,
+        P: AsRef<Path>,
+    {
+        let owned_path = path.into();
+        let git_repo = git2::Repository::open(&owned_path)?;
 
-        Ok(Self {
-            repo: repo,
-            path: path_ref.to_owned(),
-        })
+        let repo = Self {
+            path: owned_path,
+            repo: git_repo,
+        };
+
+        Ok(repo)
     }
 
     pub fn path(&self) -> &Path {
         &self.path
     }
 
-    pub fn statuses(&self) -> Result<GitStatuses, GitError> {
-        // self.repo.graph_ahead_behind
-
+    pub fn statuses(&self) -> Result<Statuses, Error> {
         let mut opts = git2::StatusOptions::new();
 
         opts.include_ignored(false)
@@ -38,50 +39,31 @@ impl GitRepo {
             .disable_pathspec_match(true)
             .exclude_submodules(true);
 
-        let statuses = self.repo
-            .statuses(Some(&mut opts))
-            .map_err(|_| GitError::Status)?;
-
-        Ok(GitStatuses::new(statuses))
-    }
-
-    pub fn reset(&self) -> Result<GitReference, GitError> {
-        let head = self.repo.head().map_err(|_| GitError::Reset)?;
-        let obj = head.peel(git2::ObjectType::Any)
-            .map_err(|_| GitError::Reset)?;
-
-        let mut builder = git2::build::CheckoutBuilder::new();
-        let options = builder
-            .remove_untracked(true) // this is ignored for a reset :()
-            .progress(|path, a, b| {
-                          if path == None {
-                              return;
-                          }
-
-                          println!("{:?} {:?} {:?}", path, a, b)
-                      });
-
         self.repo
-            .reset(&obj, git2::ResetType::Hard, Some(options))
-            .map_err(|_| GitError::Reset)?;
-
-        Ok(GitReference::new(&head))
+            .statuses(Some(&mut opts))
+            .map(|x| x.into())
+            .map_err(|x| x.into())
     }
 
-    pub fn checkout(&self, branch_name: &str) -> Result<bool, GitError> {
-        let branch_type = match branch_name.find("origin/") {
-            Some(_) => git2::BranchType::Remote,
-            None => git2::BranchType::Local,
+    pub fn reset(&self) -> Result<Reference, Error> {
+        let head = self.repo.head()?;
+        let obj = head.peel(git2::ObjectType::Any)?;
+
+        self.repo.reset(&obj, git2::ResetType::Hard, None)?;
+
+        Reference::new(&head)
+    }
+
+    pub fn checkout(&self, branch_name: &str) -> Result<bool, Error> {
+        let branch_type = if branch_name.starts_with("origin/") {
+            git2::BranchType::Remote
+        } else {
+            git2::BranchType::Local
         };
 
-        let branch = self.repo
-            .find_branch(branch_name, branch_type)
-            .map_err(|_| GitError::Checkout(GitBranch::from(branch_type)))?;
+        let branch = self.repo.find_branch(branch_name, branch_type)?;
 
-        let obj = branch
-            .get()
-            .peel(git2::ObjectType::Commit)
-            .map_err(|_| GitError::Checkout(GitBranch::from(branch_type)))?;
+        let obj = branch.get().peel(git2::ObjectType::Commit)?;
 
         match branch_type {
             git2::BranchType::Local => self.checkout_local(branch_name, &obj),
@@ -89,22 +71,14 @@ impl GitRepo {
         }
     }
 
-    fn checkout_local(&self, branch_name: &str, obj: &git2::Object) -> Result<bool, GitError> {
+    fn checkout_local(&self, branch_name: &str, obj: &git2::Object) -> Result<bool, Error> {
         let mut opts = git2::build::CheckoutBuilder::new();
 
-        self.repo
-            .checkout_tree(obj, Some(&mut opts))
-            .map_err(|_| GitError::Checkout(GitBranch::from(git2::BranchType::Local)))?;
+        self.repo.checkout_tree(obj, Some(&mut opts))?;
 
         let branch_str = format!("refs/heads/{}", branch_name);
         //println!("- checking out '{}'", &branch_str);
-        let branch_ref = match self.repo.find_reference(&branch_str) {
-            Ok(r) => r,
-            Err(e) => {
-                println!("- checkout error: {}", e.message());
-                return Err(GitError::Checkout(GitBranch::from(git2::BranchType::Local)));
-            }
-        };
+        let branch_ref = self.repo.find_reference(&branch_str)?;
 
         self.repo
             .set_head(branch_ref.name().unwrap())
@@ -113,7 +87,7 @@ impl GitRepo {
         Ok(true)
     }
 
-    fn checkout_remote(&self, obj: &git2::Object) -> Result<bool, GitError> {
+    fn checkout_remote(&self, obj: &git2::Object) -> Result<bool, Error> {
         let head_id = self.repo
             .head()
             .expect("Could not resolve head")
@@ -133,70 +107,5 @@ impl GitRepo {
         //let branch_str = "refs/heads/topic/ARTC-233";
         //self.repo.set_head(&branch_str).expect("wut");
         Ok(true)
-    }
-
-    pub fn remove_untracked(&self) -> Result<(), GitError> {
-        let statuses = self.statuses()?;
-        let iter = statuses.iter().filter(|x| match *x.status() {
-            FileStatus::New => true,
-            _ => false,
-        });
-
-        // TODO: Finish this nonsense
-        for entry in iter {
-            let p = self.path.join(entry.path());
-
-            // The whole file/directory distinction might be useless.
-            // If a untracked file is removed from an untracked directory, should also
-            // remove now empty directory?
-            if p.is_file() {
-                fs::remove_file(p).map_err(|_| GitError::RemoveUntracked)?;
-            } else if p.is_dir() {
-                fs::remove_dir_all(p).map_err(|_| GitError::RemoveUntracked)?;
-            }
-        }
-
-        Ok(())
-    }
-
-    pub fn state(&self) -> RepoState {
-        RepoState::from(self.repo.state())
-    }
-}
-
-#[derive(Debug)]
-pub enum RepoState {
-    Clean,
-    Merge,
-    Revert,
-    RevertSequence,
-    CherryPick,
-    CherryPickSequence,
-    Bisect,
-    Rebase,
-    RebaseInteractive,
-    RebaseMerge,
-    ApplyMailbox,
-    ApplyMailboxOrRebase,
-}
-
-impl From<git2::RepositoryState> for RepoState {
-    fn from(state: git2::RepositoryState) -> Self {
-        use git2::RepositoryState;
-
-        match state {
-            RepositoryState::Clean => RepoState::Clean,
-            RepositoryState::Merge => RepoState::Merge,
-            RepositoryState::Revert => RepoState::Revert,
-            RepositoryState::RevertSequence => RepoState::RevertSequence,
-            RepositoryState::CherryPick => RepoState::CherryPick,
-            RepositoryState::CherryPickSequence => RepoState::CherryPickSequence,
-            RepositoryState::Bisect => RepoState::Bisect,
-            RepositoryState::Rebase => RepoState::Rebase,
-            RepositoryState::RebaseInteractive => RepoState::RebaseInteractive,
-            RepositoryState::RebaseMerge => RepoState::RebaseMerge,
-            RepositoryState::ApplyMailbox => RepoState::ApplyMailbox,
-            RepositoryState::ApplyMailboxOrRebase => RepoState::ApplyMailboxOrRebase,
-        }
     }
 }
