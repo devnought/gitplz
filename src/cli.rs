@@ -1,12 +1,14 @@
-use clap::{App, Arg, Shell, SubCommand};
+use clap::{App, Arg, ArgGroup, Shell, SubCommand};
 use std::io;
 
 const APP_NAME: &str = "git plz";
+const CMD_BRANCH: &str = "branch";
 const CMD_CHECKOUT: &str = "checkout";
 const CMD_COMPLETIONS: &str = "completions";
 const CMD_RESET: &str = "reset";
 const CMD_STATUS: &str = "status";
 const BRANCH: &str = "branch";
+const DELETE: &str = "delete";
 const SHELL: &str = "shell";
 
 #[derive(Debug)]
@@ -18,17 +20,40 @@ pub enum CommandArg {
 
 #[derive(Debug)]
 pub enum RunOption {
-    Checkout { branch: String },
+    Branch {
+        branch: String,
+        option: BranchOption,
+    },
+    Checkout {
+        branch: String,
+    },
     Reset,
     Status,
+}
+
+#[derive(Debug)]
+pub enum BranchOption {
+    Delete,
 }
 
 fn build_cli<'a, 'b>() -> App<'a, 'b> {
     App::new("Git, please")
         .bin_name(APP_NAME)
-        .version("0.2")
-        .author("Kyle Gretchev")
+        .version(crate_version!())
+        .author(crate_authors!())
         .about("Run commands on a set of git repositories in a folder tree")
+        .subcommand(
+            SubCommand::with_name(CMD_BRANCH)
+                .about("Perform bulk branch operations")
+                .group(ArgGroup::with_name(CMD_BRANCH).required(true))
+                .arg(
+                    Arg::with_name(DELETE)
+                        .short("d")
+                        .long("delete")
+                        .value_name("BRANCH")
+                        .group(CMD_BRANCH),
+                ),
+        )
         .subcommand(
             SubCommand::with_name(CMD_CHECKOUT)
                 .about("Checkout branch across repos")
@@ -54,27 +79,35 @@ fn build_cli<'a, 'b>() -> App<'a, 'b> {
 pub fn handle_args() -> CommandArg {
     let matches = build_cli().get_matches();
 
-    match matches.subcommand_name() {
-        Some(CMD_CHECKOUT) => {
-            let branch_match = matches.subcommand_matches(CMD_CHECKOUT).unwrap();
+    match matches.subcommand() {
+        (CMD_BRANCH, Some(branch_matches)) => {
+            let option = {
+                if branch_matches.is_present(DELETE) {
+                    BranchOption::Delete
+                } else {
+                    panic!("Invalid branch option");
+                }
+            };
 
             CommandArg::Run {
-                option: RunOption::Checkout {
-                    branch: value_t!(branch_match, BRANCH, String).unwrap(),
+                option: RunOption::Branch {
+                    branch: value_t!(branch_matches, CMD_BRANCH, String).unwrap(),
+                    option,
                 },
             }
         }
-        Some(CMD_COMPLETIONS) => {
-            let shell_match = matches.subcommand_matches(CMD_COMPLETIONS).unwrap();
-
-            CommandArg::Completions {
-                shell: value_t!(shell_match, SHELL, Shell).unwrap(),
-            }
-        }
-        Some(CMD_RESET) => CommandArg::Run {
+        (CMD_CHECKOUT, Some(checkout_matches)) => CommandArg::Run {
+            option: RunOption::Checkout {
+                branch: value_t!(checkout_matches, BRANCH, String).unwrap(),
+            },
+        },
+        (CMD_COMPLETIONS, Some(shell_matches)) => CommandArg::Completions {
+            shell: value_t!(shell_matches, SHELL, Shell).unwrap(),
+        },
+        (CMD_RESET, _) => CommandArg::Run {
             option: RunOption::Reset,
         },
-        Some(CMD_STATUS) => CommandArg::Run {
+        (CMD_STATUS, _) => CommandArg::Run {
             option: RunOption::Status,
         },
 

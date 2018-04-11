@@ -77,7 +77,6 @@ impl GitRepo {
         self.repo.checkout_tree(obj, Some(&mut opts))?;
 
         let branch_str = format!("refs/heads/{}", branch_name);
-        //println!("- checking out '{}'", &branch_str);
         let branch_ref = self.repo.find_reference(&branch_str)?;
 
         self.repo
@@ -104,8 +103,15 @@ impl GitRepo {
         self.repo
             .reset(obj, git2::ResetType::Hard, None)
             .expect("wuufttttt");
-        //let branch_str = "refs/heads/topic/ARTC-233";
-        //self.repo.set_head(&branch_str).expect("wut");
+
+        Ok(true)
+    }
+
+    pub fn delete_local_branch(&self, branch_name: &str) -> Result<bool, Error> {
+        self.repo
+            .find_branch(branch_name, git2::BranchType::Local)?
+            .delete()?;
+
         Ok(true)
     }
 }

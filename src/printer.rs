@@ -3,7 +3,7 @@ use std::{io::Write, path::{Path, PathBuf}};
 use gitlib::Status;
 use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 use printopts::PrintOptions;
-use worktype::WorkResult;
+use worktype::{BranchOption, WorkResult};
 
 pub struct Printer<'a> {
     print_options: &'a PrintOptions,
@@ -16,6 +16,11 @@ impl<'a> Printer<'a> {
 
     pub fn handle(&self, message: &WorkResult) {
         match *message {
+            WorkResult::Branch {
+                ref path,
+                ref branch,
+                ref option,
+            } => self.branch(path, branch, option),
             WorkResult::Checkout {
                 ref path,
                 ref branch,
@@ -26,6 +31,51 @@ impl<'a> Printer<'a> {
                 ref statuses,
             } => self.status(path, statuses),
         }
+    }
+
+    pub fn branch(&self, path: &Path, branch: &str, _option: &BranchOption) {
+        let stdout = StandardStream::stdout(ColorChoice::Auto);
+        let mut handle = stdout.lock();
+
+        let mut cs = ColorSpec::new();
+        cs.set_intense(true);
+        cs.set_fg(Some(Color::Red));
+
+        self.color_context(&cs, &mut handle, |h| {
+            write!(h, " {}", branch).expect("write fail")
+        });
+
+        writeln!(handle, " - {}", path.display()).expect("write fail");
+    }
+
+    pub fn checkout(&self, path: &Path, branch: &str) {
+        let stdout = StandardStream::stdout(ColorChoice::Auto);
+        let mut handle = stdout.lock();
+
+        let mut cs = ColorSpec::new();
+        cs.set_intense(true);
+        cs.set_fg(Some(Color::Yellow));
+
+        self.color_context(&cs, &mut handle, |h| {
+            write!(h, " {}", branch).expect("write fail")
+        });
+
+        writeln!(handle, " - {}", path.display()).expect("write fail");
+    }
+
+    pub fn reset(&self, path: &Path, head: &str) {
+        let stdout = StandardStream::stdout(ColorChoice::Auto);
+        let mut handle = stdout.lock();
+
+        let mut cs = ColorSpec::new();
+        cs.set_intense(true);
+        cs.set_fg(Some(Color::Yellow));
+
+        self.color_context(&cs, &mut handle, |h| {
+            write!(h, " {}", head).expect("write fail")
+        });
+
+        writeln!(handle, " - {}", path.display()).expect("write fail");
     }
 
     pub fn status(&self, path: &Path, statuses: &[(PathBuf, Status)]) {
@@ -62,36 +112,6 @@ impl<'a> Printer<'a> {
 
             writeln!(handle, " {}", path.display()).expect("write fail");
         }
-    }
-
-    pub fn checkout(&self, path: &Path, branch: &str) {
-        let stdout = StandardStream::stdout(ColorChoice::Auto);
-        let mut handle = stdout.lock();
-
-        let mut cs = ColorSpec::new();
-        cs.set_intense(true);
-        cs.set_fg(Some(Color::Yellow));
-
-        self.color_context(&cs, &mut handle, |h| {
-            write!(h, " {}", branch).expect("write fail")
-        });
-
-        writeln!(handle, " - {}", path.display()).expect("write fail");
-    }
-
-    pub fn reset(&self, path: &Path, head: &str) {
-        let stdout = StandardStream::stdout(ColorChoice::Auto);
-        let mut handle = stdout.lock();
-
-        let mut cs = ColorSpec::new();
-        cs.set_intense(true);
-        cs.set_fg(Some(Color::Yellow));
-
-        self.color_context(&cs, &mut handle, |h| {
-            write!(h, " {}", head).expect("write fail")
-        });
-
-        writeln!(handle, " - {}", path.display()).expect("write fail");
     }
 
     fn color_context<C, F>(&self, color_spec: &ColorSpec, handle: &mut C, func: F)

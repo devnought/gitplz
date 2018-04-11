@@ -13,7 +13,7 @@ impl RepoIterState {
         P: Into<PathBuf>,
     {
         Self {
-            pending: { vec![path.into()] },
+            pending: vec![path.into()],
             filtered: None,
         }
     }

@@ -1,10 +1,10 @@
 use gitlib::{GitRepo, Status};
-use cli::RunOption;
+use cli::{self, RunOption};
 use threadpool::ThreadPool;
 
 use std::{fs, sync::mpsc::Sender};
 
-use worktype::WorkType;
+use worktype::{BranchOption, WorkType};
 
 const THREAD_SIGNAL: &str = "Could not signal main thread with WorkType::Work";
 
@@ -20,17 +20,29 @@ impl<'a> Processor<'a> {
 
     pub fn repo(&self, tx: Sender<WorkType>, index: usize, repo: GitRepo) {
         match *self.run_option {
-            RunOption::Status => self.pool
-                .execute(move || tx.send(Self::status(&repo, index)).expect(THREAD_SIGNAL)),
-            RunOption::Reset => self.pool
-                .execute(move || tx.send(Self::reset(&repo, index)).expect(THREAD_SIGNAL)),
+            RunOption::Branch {
+                ref branch,
+                ref option,
+            } => {
+                let branch = branch.clone();
+                match *option {
+                    cli::BranchOption::Delete => self.pool.execute(move || {
+                        tx.send(Self::branch_delete(&repo, index, branch))
+                            .expect(THREAD_SIGNAL)
+                    }),
+                }
+            }
             RunOption::Checkout { ref branch } => {
                 let branch = branch.clone();
                 self.pool.execute(move || {
-                    tx.send(Self::checkout(&repo, index, &branch))
+                    tx.send(Self::checkout(&repo, index, branch))
                         .expect(THREAD_SIGNAL)
                 });
             }
+            RunOption::Reset => self.pool
+                .execute(move || tx.send(Self::reset(&repo, index)).expect(THREAD_SIGNAL)),
+            RunOption::Status => self.pool
+                .execute(move || tx.send(Self::status(&repo, index)).expect(THREAD_SIGNAL)),
         }
     }
 
@@ -96,9 +108,17 @@ impl<'a> Processor<'a> {
         WorkType::reset(index, repo.path().into(), head.name().into())
     }
 
-    fn checkout(repo: &GitRepo, index: usize, branch: &str) -> WorkType {
-        if let Ok(true) = repo.checkout(branch) {
-            WorkType::checkout(index, repo.path().into(), branch.into())
+    fn checkout(repo: &GitRepo, index: usize, branch: String) -> WorkType {
+        if let Ok(true) = repo.checkout(&branch) {
+            WorkType::checkout(index, repo.path().into(), branch)
+        } else {
+            WorkType::empty(index)
+        }
+    }
+
+    fn branch_delete(repo: &GitRepo, index: usize, branch: String) -> WorkType {
+        if let Ok(true) = repo.delete_local_branch(&branch) {
+            WorkType::branch(index, repo.path().into(), branch, BranchOption::Delete)
         } else {
             WorkType::empty(index)
         }
