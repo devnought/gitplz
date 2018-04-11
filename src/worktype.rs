@@ -1,4 +1,4 @@
-use gitlib::{GitRepo, Status};
+use gitlib::{self, GitRepo, Status};
 use std::{path::PathBuf, sync::mpsc::Sender};
 
 pub enum WorkResult {
@@ -6,6 +6,7 @@ pub enum WorkResult {
         path: PathBuf,
         branch: String,
         option: BranchOption,
+        error: Option<gitlib::Error>,
     },
     Checkout {
         path: PathBuf,
@@ -23,6 +24,7 @@ pub enum WorkResult {
 
 pub enum BranchOption {
     Delete,
+    Find,
 }
 
 pub enum WorkType {
@@ -41,13 +43,20 @@ pub enum WorkType {
 }
 
 impl WorkType {
-    pub fn branch(index: usize, path: PathBuf, branch: String, option: BranchOption) -> Self {
+    pub fn branch(
+        index: usize,
+        path: PathBuf,
+        branch: String,
+        option: BranchOption,
+        error: Option<gitlib::Error>,
+    ) -> Self {
         WorkType::Work {
             index,
             message: WorkResult::Branch {
                 path,
                 branch,
                 option,
+                error,
             },
         }
     }

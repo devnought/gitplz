@@ -9,6 +9,7 @@ const CMD_RESET: &str = "reset";
 const CMD_STATUS: &str = "status";
 const BRANCH: &str = "branch";
 const DELETE: &str = "delete";
+const FIND: &str = "find";
 const SHELL: &str = "shell";
 
 #[derive(Debug)]
@@ -34,6 +35,7 @@ pub enum RunOption {
 #[derive(Debug)]
 pub enum BranchOption {
     Delete,
+    Find,
 }
 
 fn build_cli<'a, 'b>() -> App<'a, 'b> {
@@ -50,6 +52,13 @@ fn build_cli<'a, 'b>() -> App<'a, 'b> {
                     Arg::with_name(DELETE)
                         .short("d")
                         .long("delete")
+                        .value_name("BRANCH")
+                        .group(CMD_BRANCH),
+                )
+                .arg(
+                    Arg::with_name(FIND)
+                        .short("f")
+                        .long("find")
                         .value_name("BRANCH")
                         .group(CMD_BRANCH),
                 ),
@@ -84,6 +93,8 @@ pub fn handle_args() -> CommandArg {
             let option = {
                 if branch_matches.is_present(DELETE) {
                     BranchOption::Delete
+                } else if branch_matches.is_present(FIND) {
+                    BranchOption::Find
                 } else {
                     panic!("Invalid branch option");
                 }

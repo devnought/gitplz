@@ -114,4 +114,10 @@ impl GitRepo {
 
         Ok(true)
     }
+
+    pub fn has_local_branch(&self, branch_name: &str) -> Result<bool, Error> {
+        self.repo.find_branch(branch_name, git2::BranchType::Local)?;
+
+        Ok(true)
+    }
 }

@@ -1,4 +1,4 @@
-use gitlib::{GitRepo, Status};
+use gitlib::{self, GitRepo, Status};
 use cli::{self, RunOption};
 use threadpool::ThreadPool;
 
@@ -28,6 +28,10 @@ impl<'a> Processor<'a> {
                 match *option {
                     cli::BranchOption::Delete => self.pool.execute(move || {
                         tx.send(Self::branch_delete(&repo, index, branch))
+                            .expect(THREAD_SIGNAL)
+                    }),
+                    cli::BranchOption::Find => self.pool.execute(move || {
+                        tx.send(Self::branch_find(&repo, index, branch))
                             .expect(THREAD_SIGNAL)
                     }),
                 }
@@ -117,8 +121,28 @@ impl<'a> Processor<'a> {
     }
 
     fn branch_delete(repo: &GitRepo, index: usize, branch: String) -> WorkType {
-        if let Ok(true) = repo.delete_local_branch(&branch) {
-            WorkType::branch(index, repo.path().into(), branch, BranchOption::Delete)
+        match repo.delete_local_branch(&branch) {
+            Ok(true) => WorkType::branch(
+                index,
+                repo.path().into(),
+                branch,
+                BranchOption::Delete,
+                None,
+            ),
+            Ok(false) | Err(gitlib::Error::NotFound) => WorkType::empty(index),
+            Err(e) => WorkType::branch(
+                index,
+                repo.path().into(),
+                branch,
+                BranchOption::Delete,
+                Some(e),
+            ),
+        }
+    }
+
+    fn branch_find(repo: &GitRepo, index: usize, branch: String) -> WorkType {
+        if let Ok(true) = repo.has_local_branch(&branch) {
+            WorkType::branch(index, repo.path().into(), branch, BranchOption::Find, None)
         } else {
             WorkType::empty(index)
         }

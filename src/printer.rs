@@ -1,6 +1,6 @@
 use std::{io::Write, path::{Path, PathBuf}};
 
-use gitlib::Status;
+use gitlib::{self, Status};
 use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 use printopts::PrintOptions;
 use worktype::{BranchOption, WorkResult};
@@ -20,7 +20,8 @@ impl<'a> Printer<'a> {
                 ref path,
                 ref branch,
                 ref option,
-            } => self.branch(path, branch, option),
+                ref error,
+            } => self.branch(path, branch, option, error),
             WorkResult::Checkout {
                 ref path,
                 ref branch,
@@ -33,13 +34,45 @@ impl<'a> Printer<'a> {
         }
     }
 
-    pub fn branch(&self, path: &Path, branch: &str, _option: &BranchOption) {
+    pub fn branch(
+        &self,
+        path: &Path,
+        branch: &str,
+        option: &BranchOption,
+        error: &Option<gitlib::Error>,
+    ) {
+        match *option {
+            BranchOption::Delete => self.branch_delete(path, branch, error),
+            BranchOption::Find => self.branch_find(path, branch),
+        }
+    }
+
+    fn branch_delete(&self, path: &Path, branch: &str, error: &Option<gitlib::Error>) {
         let stdout = StandardStream::stdout(ColorChoice::Auto);
         let mut handle = stdout.lock();
 
         let mut cs = ColorSpec::new();
         cs.set_intense(true);
         cs.set_fg(Some(Color::Red));
+
+        self.color_context(&cs, &mut handle, |h| {
+            write!(h, " {}", branch).expect("write fail");
+
+            if error.is_some() {
+                write!(h, " - ERROR").expect("write fail");
+            }
+        });
+
+        writeln!(handle, " - {}", path.display()).expect("write fail");
+    }
+
+    fn branch_find(&self, path: &Path, branch: &str) {
+        let stdout = StandardStream::stdout(ColorChoice::Auto);
+        let mut handle = stdout.lock();
+
+        let mut cs = ColorSpec::new();
+        cs.set_intense(true);
+        cs.set_fg(Some(Color::Green));
 
         self.color_context(&cs, &mut handle, |h| {
             write!(h, " {}", branch).expect("write fail")
