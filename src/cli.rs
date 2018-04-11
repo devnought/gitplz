@@ -46,7 +46,7 @@ fn build_cli<'a, 'b>() -> App<'a, 'b> {
         .about("Run commands on a set of git repositories in a folder tree")
         .subcommand(
             SubCommand::with_name(CMD_BRANCH)
-                .about("Perform bulk branch operations")
+                .about("Perform bulk local branch operations")
                 .group(ArgGroup::with_name(CMD_BRANCH).required(true))
                 .arg(
                     Arg::with_name(DELETE)
