@@ -6,7 +6,7 @@ authors = ["Kyle Gretchev <kgretchev@gmail.com>"]
 [workspace]
 
 [dependencies]
-atty = "0.2.8"
+atty = "0.2.9"
 termcolor = "0.3.6"
 threadpool = "1.7.1"
 gitlib = { path = "./libs/gitlib" }
