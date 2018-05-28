@@ -1,5 +1,5 @@
-use std::path::Path;
 use git2;
+use std::path::Path;
 
 const STATUS_COLLECTION: [git2::Status; 12] = [
     git2::Status::INDEX_NEW,

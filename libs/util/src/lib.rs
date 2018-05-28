@@ -1,7 +1,7 @@
 extern crate gitlib;
 
-mod repo_iter_state;
 mod repo_iter;
+mod repo_iter_state;
 pub use repo_iter::RepoIter;
 
 #[cfg(test)]

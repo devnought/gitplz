@@ -1,5 +1,5 @@
-use std::path::PathBuf;
 use gitlib::GitRepo;
+use std::path::PathBuf;
 
 use repo_iter_state::RepoIterState;
 

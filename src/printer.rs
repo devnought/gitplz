@@ -1,8 +1,8 @@
 use std::{io::Write, path::{Path, PathBuf}};
 
 use gitlib::{self, Status};
-use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 use printopts::PrintOptions;
+use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 use worktype::{BranchOption, WorkResult};
 
 pub struct Printer<'a> {
@@ -15,22 +15,16 @@ impl<'a> Printer<'a> {
     }
 
     pub fn handle(&self, message: &WorkResult) {
-        match *message {
+        match message {
             WorkResult::Branch {
-                ref path,
-                ref branch,
-                ref option,
-                ref error,
+                path,
+                branch,
+                option,
+                error,
             } => self.branch(path, branch, option, error),
-            WorkResult::Checkout {
-                ref path,
-                ref branch,
-            } => self.checkout(path, branch),
-            WorkResult::Reset { ref path, ref head } => self.reset(path, head),
-            WorkResult::Status {
-                ref path,
-                ref statuses,
-            } => self.status(path, statuses),
+            WorkResult::Checkout { path, branch } => self.checkout(path, branch),
+            WorkResult::Reset { path, head } => self.reset(path, head),
+            WorkResult::Status { path, statuses } => self.status(path, statuses),
         }
     }
 
@@ -41,7 +35,7 @@ impl<'a> Printer<'a> {
         option: &BranchOption,
         error: &Option<gitlib::Error>,
     ) {
-        match *option {
+        match option {
             BranchOption::Delete => self.branch_delete(path, branch, error),
             BranchOption::Find => self.branch_find(path, branch),
         }
@@ -120,8 +114,8 @@ impl<'a> Printer<'a> {
         let mut cs = ColorSpec::new();
         cs.set_intense(true);
 
-        for &(ref path, ref status) in statuses {
-            let (status_str, color) = match *status {
+        for (path, status) in statuses {
+            let (status_str, color) = match status {
                 Status::Conflicted => ("       Conflicted", Color::Magenta),
                 Status::Deleted => ("          Deleted", Color::Red),
                 Status::Ignored => ("          Ignored", Color::Magenta),

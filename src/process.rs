@@ -1,5 +1,5 @@
-use gitlib::{self, GitRepo, Status};
 use cli::{self, RunOption};
+use gitlib::{self, GitRepo, Status};
 use threadpool::ThreadPool;
 
 use std::{fs, sync::mpsc::Sender};
@@ -19,13 +19,10 @@ impl<'a> Processor<'a> {
     }
 
     pub fn repo(&self, tx: Sender<WorkType>, index: usize, repo: GitRepo) {
-        match *self.run_option {
-            RunOption::Branch {
-                ref branch,
-                ref option,
-            } => {
+        match self.run_option {
+            RunOption::Branch { branch, option } => {
                 let branch = branch.clone();
-                match *option {
+                match option {
                     cli::BranchOption::Delete => self.pool.execute(move || {
                         tx.send(Self::branch_delete(&repo, index, branch))
                             .expect(THREAD_SIGNAL)
@@ -36,7 +33,7 @@ impl<'a> Processor<'a> {
                     }),
                 }
             }
-            RunOption::Checkout { ref branch } => {
+            RunOption::Checkout { branch } => {
                 let branch = branch.clone();
                 self.pool.execute(move || {
                     tx.send(Self::checkout(&repo, index, branch))

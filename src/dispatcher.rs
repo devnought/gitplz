@@ -1,7 +1,7 @@
 use std::{collections::BTreeMap, sync::mpsc::Receiver};
 
-use process::Processor;
 use printer::Printer;
+use process::Processor;
 use worktype::{WorkResult, WorkType};
 
 pub struct Dispatcher<'a> {

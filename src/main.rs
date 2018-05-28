@@ -8,8 +8,8 @@ extern crate util;
 
 use std::{env, sync::mpsc::{channel, Receiver}};
 
-use util::RepoIter;
 use threadpool::ThreadPool;
+use util::RepoIter;
 
 mod cli;
 use cli::CommandArg;

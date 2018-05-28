@@ -1,5 +1,5 @@
-use std::path::{Path, PathBuf};
 use super::{StatusEntryIter, git2};
+use std::path::{Path, PathBuf};
 
 #[derive(Debug)]
 pub struct StatusEntry {
