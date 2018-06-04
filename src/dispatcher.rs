@@ -1,30 +1,39 @@
+use color_printer::ColorPrinter;
+use command::{Command, WorkResult, WorkType};
 use std::{collections::BTreeMap, sync::mpsc::Receiver};
+use threadpool::ThreadPool;
 
-use printer::Printer;
-use process::Processor;
-use worktype::{WorkResult, WorkType};
+const THREAD_SIGNAL: &str = "Could not signal main thread with WorkType::Work";
 
 pub struct Dispatcher<'a> {
-    queue: BTreeMap<usize, Option<WorkResult>>,
+    queue: BTreeMap<usize, Option<Box<WorkResult>>>,
     next_index: usize,
-    processor: &'a Processor<'a>,
-    printer: &'a Printer<'a>,
+    command: Box<Command>,
+    pool: &'a ThreadPool,
+    printer: ColorPrinter<'a>,
 }
 
 impl<'a> Dispatcher<'a> {
-    pub fn new(processor: &'a Processor, printer: &'a Printer) -> Self {
+    pub fn new(pool: &'a ThreadPool, printer: ColorPrinter<'a>, command: Box<Command>) -> Self {
         Self {
-            processor,
-            printer,
             queue: BTreeMap::new(),
             next_index: 0,
+            pool,
+            command,
+            printer,
         }
     }
 
     pub fn run(&mut self, rx: &Receiver<WorkType>) {
         while let Ok(result) = rx.recv() {
             match result {
-                WorkType::Repo { index, repo, tx } => self.processor.repo(tx, index, repo),
+                WorkType::Repo { index, repo, tx } => {
+                    let worker = self.command.box_clone();
+                    self.pool.execute(move || {
+                        let result = worker.process(index, repo);
+                        tx.send(result).expect(THREAD_SIGNAL)
+                    })
+                }
                 WorkType::WorkEmpty { index } => {
                     if index == self.next_index {
                         self.process_queue();
@@ -32,13 +41,13 @@ impl<'a> Dispatcher<'a> {
                         self.queue.insert(index, None);
                     }
                 }
-                WorkType::Work { index, message } => {
+                WorkType::Work { index, result } => {
                     if self.next_index != index {
-                        self.queue.insert(index, Some(message));
+                        self.queue.insert(index, Some(result));
                         continue;
                     }
 
-                    self.printer.handle(&message);
+                    result.print(&mut self.printer);
 
                     // If there are adjacent items in the queue, process them.
                     self.process_queue();
@@ -60,8 +69,8 @@ impl<'a> Dispatcher<'a> {
         self.next_index += 1;
 
         while let Some(result) = self.queue.remove(&self.next_index) {
-            if let Some(message) = result {
-                self.printer.handle(&message);
+            if let Some(work_result) = result {
+                work_result.print(&mut self.printer);
             }
 
             self.next_index += 1;

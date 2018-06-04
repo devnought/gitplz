@@ -1,0 +1,8 @@
+[package]
+name = "command"
+version = "0.1.0"
+authors = ["Kyle Gretchev <kgretchev@gmail.com>"]
+
+[dependencies]
+color_printer = { path = "../color_printer" }
+gitlib = { path = "../gitlib" }

@@ -1,33 +1,27 @@
 extern crate atty;
 #[macro_use]
 extern crate clap;
+extern crate color_printer;
+extern crate command;
 extern crate gitlib;
-extern crate termcolor;
 extern crate threadpool;
 extern crate util;
 
-use std::{env, sync::mpsc::{channel, Receiver}};
+use std::{env,
+          sync::mpsc::{channel, Receiver}};
 
+use color_printer::ColorPrinter;
 use threadpool::ThreadPool;
 use util::RepoIter;
 
 mod cli;
-use cli::CommandArg;
-
-mod worktype;
-use worktype::WorkType;
+use cli::{BranchOption, CommandArg, RunOption};
 
 mod dispatcher;
 use dispatcher::Dispatcher;
 
-mod process;
-use process::Processor;
-
-mod printer;
-use printer::Printer;
-
-mod printopts;
-use printopts::PrintOptions;
+use command::{BranchDeleteCommand, BranchFindCommand, CheckoutCommand, Command, ResetCommand,
+              StatusCommand, WorkType};
 
 fn main() {
     let run_option = {
@@ -44,15 +38,24 @@ fn main() {
         }
     };
 
+    let is_terminal = atty::is(atty::Stream::Stdout);
+    let stream = color_printer::StandardStream::stdout(color_printer::ColorChoice::Auto);
+    let printer = ColorPrinter::new(is_terminal, &stream);
+
+    let command: Box<Command> = match run_option {
+        RunOption::Checkout { branch } => CheckoutCommand::box_new(branch),
+        RunOption::Branch { branch, option } => match option {
+            BranchOption::Delete => BranchDeleteCommand::box_new(branch),
+            BranchOption::Find => BranchFindCommand::box_new(branch),
+        },
+        RunOption::Reset => ResetCommand::box_new(),
+        RunOption::Status => StatusCommand::box_new(),
+    };
+
     let pool = threadpool::Builder::new().build();
     let rx = start_repo_iter(&pool);
 
-    let print_opts = PrintOptions::new(atty::is(atty::Stream::Stdout));
-    let printer = Printer::new(&print_opts);
-    let processor = Processor::new(&pool, &run_option);
-    let mut dispatcher = Dispatcher::new(&processor, &printer);
-
-    // Main dispatch processor. All threadpool messages get processed here.
+    let mut dispatcher = Dispatcher::new(&pool, printer, command);
     dispatcher.run(&rx);
 }
 

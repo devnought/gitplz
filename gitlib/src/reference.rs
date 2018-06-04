@@ -1,4 +1,4 @@
-use super::{Error, git2};
+use super::{git2, Error};
 
 pub struct Reference {
     name: String,

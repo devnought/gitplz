@@ -1,4 +1,4 @@
-use super::{Error, Reference, Statuses, git2};
+use super::{git2, Error, Reference, Statuses};
 use std::path::{Path, PathBuf};
 
 pub struct GitRepo {

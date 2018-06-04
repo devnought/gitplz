@@ -1,4 +1,7 @@
-use std::{io, fs::{DirEntry, ReadDir}, iter::Filter, path::PathBuf};
+use std::{fs::{DirEntry, ReadDir},
+          io,
+          iter::Filter,
+          path::PathBuf};
 
 pub type InternalRepoIter = Filter<ReadDir, fn(&io::Result<DirEntry>) -> bool>;
 

@@ -1,4 +1,4 @@
-use super::{StatusEntryIter, git2};
+use super::{git2, StatusEntryIter};
 use std::path::{Path, PathBuf};
 
 #[derive(Debug)]

@@ -1,4 +1,4 @@
-use super::{StatusEntry, git2};
+use super::{git2, StatusEntry};
 use std::iter::FilterMap;
 
 pub type StatusIter<'a> =
