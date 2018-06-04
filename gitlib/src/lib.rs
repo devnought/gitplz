@@ -25,6 +25,7 @@ pub enum Error {
     Uncommitted,
     Directory,
     InvalidUtf8,
+    ZeroSizedBranchName,
 }
 
 impl From<git2::Error> for Error {

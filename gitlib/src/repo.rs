@@ -55,10 +55,18 @@ impl GitRepo {
     }
 
     pub fn checkout(&self, branch_name: &str) -> Result<bool, Error> {
-        let branch_type = if branch_name.starts_with("origin/") {
-            git2::BranchType::Remote
-        } else {
-            git2::BranchType::Local
+        let components = branch_name.split("/").collect::<Vec<_>>();
+
+        let branch_type = match components.len() {
+            0 => return Err(Error::ZeroSizedBranchName),
+            1 => git2::BranchType::Local,
+            _ => {
+                if let Ok(_) = self.repo.find_remote(&components[0]) {
+                    git2::BranchType::Remote
+                } else {
+                    git2::BranchType::Local
+                }
+            }
         };
 
         let branch = self.repo.find_branch(branch_name, branch_type)?;
@@ -95,7 +103,6 @@ impl GitRepo {
             .id();
 
         if head_id == obj.id() {
-            //println!("bailing out");
             return Ok(false);
         }
 
