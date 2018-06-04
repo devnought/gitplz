@@ -1,8 +1,8 @@
+use super::{worktype::{WorkResult, WorkType},
+            Command};
 use color_printer::{Color, ColorPrinter, ColorSpec};
-use command::Command;
 use gitlib::GitRepo;
 use std::{io::Write, path::PathBuf};
-use worktype::{WorkResult, WorkType};
 
 #[derive(Clone)]
 pub struct CheckoutCommand {
