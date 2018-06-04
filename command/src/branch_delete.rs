@@ -28,12 +28,12 @@ pub struct BranchDeleteCommandResult {
 impl Command for BranchDeleteCommand {
     fn process(&self, index: usize, repo: GitRepo) -> WorkType {
         let result = match repo.delete_local_branch(&self.branch) {
-            Ok(true) => BranchDeleteCommandResult {
+            Ok(()) => BranchDeleteCommandResult {
                 path: repo.path().into(),
                 branch: self.branch.clone(),
                 error: None,
             },
-            Ok(false) | Err(gitlib::Error::NotFound) => return WorkType::empty(index),
+            Err(gitlib::Error::NotFound) => return WorkType::empty(index),
             Err(e) => BranchDeleteCommandResult {
                 path: repo.path().into(),
                 branch: self.branch.clone(),

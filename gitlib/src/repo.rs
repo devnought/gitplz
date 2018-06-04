@@ -114,17 +114,17 @@ impl GitRepo {
         Ok(true)
     }
 
-    pub fn delete_local_branch(&self, branch_name: &str) -> Result<bool, Error> {
+    pub fn delete_local_branch(&self, branch_name: &str) -> Result<(), Error> {
         self.repo
             .find_branch(branch_name, git2::BranchType::Local)?
             .delete()?;
 
-        Ok(true)
+        Ok(())
     }
 
-    pub fn has_local_branch(&self, branch_name: &str) -> Result<bool, Error> {
+    pub fn has_local_branch(&self, branch_name: &str) -> Result<(), Error> {
         self.repo.find_branch(branch_name, git2::BranchType::Local)?;
 
-        Ok(true)
+        Ok(())
     }
 }

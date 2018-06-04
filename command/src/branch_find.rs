@@ -26,7 +26,7 @@ pub struct BranchFindCommandResult {
 
 impl Command for BranchFindCommand {
     fn process(&self, index: usize, repo: GitRepo) -> WorkType {
-        if let Ok(true) = repo.has_local_branch(&self.branch) {
+        if let Ok(()) = repo.has_local_branch(&self.branch) {
             let result = Box::new(BranchFindCommandResult {
                 branch: self.branch.clone(),
                 path: repo.path().into(),
