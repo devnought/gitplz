@@ -1,0 +1,11 @@
+[package]
+name = "command-derive"
+version = "0.1.0"
+authors = ["Kyle Gretchev <kyle.gretchev@magnetforensics.com>"]
+
+[lib]
+proc-macro = true
+
+[dependencies]
+syn = "0.14.2"
+quote = "0.6.3"

@@ -1,25 +1,26 @@
 extern crate color_printer;
 extern crate gitlib;
 
+macro_rules! mods {
+    ( $( $x:ident ),* ) => {
+        $(
+            mod $x;
+        )*
+    };
+}
+
 mod command;
 pub use command::Command;
 
 mod worktype;
 pub use worktype::{WorkResult, WorkType};
 
-mod checkout;
+include!(concat!(env!("OUT_DIR"), "/generated-commands.rs"));
+
 pub use checkout::CheckoutCommand;
-
-mod branch_delete;
 pub use branch_delete::BranchDeleteCommand;
-
-mod branch_find;
 pub use branch_find::BranchFindCommand;
-
-mod reset;
 pub use reset::ResetCommand;
-
-mod status;
 pub use status::StatusCommand;
 
 #[cfg(test)]

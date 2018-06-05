@@ -6,3 +6,4 @@ authors = ["Kyle Gretchev <kgretchev@gmail.com>"]
 [dependencies]
 color_printer = { path = "../color_printer" }
 gitlib = { path = "../gitlib" }
+command-derive = { path = "../command-derive" }
