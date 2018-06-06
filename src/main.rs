@@ -42,11 +42,11 @@ fn main() {
     let printer = ColorPrinter::new(is_terminal, &stream);
 
     let command: Box<Command> = match run_option {
-        RunOption::Checkout { branch } => CheckoutCommand::box_new(branch),
         RunOption::Branch { branch, option } => match option {
             BranchOption::Delete => BranchDeleteCommand::box_new(branch),
             BranchOption::Find => BranchFindCommand::box_new(branch),
         },
+        RunOption::Checkout { branch } => CheckoutCommand::box_new(branch),
         RunOption::Reset => ResetCommand::box_new(),
         RunOption::Status => StatusCommand::box_new(),
     };

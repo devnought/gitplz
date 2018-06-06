@@ -17,7 +17,7 @@ impl ResetCommand {
     }
 }
 
-pub struct ResetCommandResult {
+struct ResetCommandResult {
     path: PathBuf,
     head: String,
 }

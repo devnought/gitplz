@@ -19,7 +19,7 @@ impl CheckoutCommand {
     }
 }
 
-pub struct CheckoutCommandResult {
+struct CheckoutCommandResult {
     branch: String,
     path: PathBuf,
 }

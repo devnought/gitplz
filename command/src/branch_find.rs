@@ -19,7 +19,7 @@ impl BranchFindCommand {
     }
 }
 
-pub struct BranchFindCommandResult {
+struct BranchFindCommandResult {
     branch: String,
     path: PathBuf,
 }

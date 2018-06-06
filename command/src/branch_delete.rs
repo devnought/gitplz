@@ -19,7 +19,7 @@ impl BranchDeleteCommand {
     }
 }
 
-pub struct BranchDeleteCommandResult {
+struct BranchDeleteCommandResult {
     path: PathBuf,
     branch: String,
     error: Option<gitlib::Error>,

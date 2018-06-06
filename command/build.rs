@@ -11,14 +11,6 @@ fn main() {
     let dest_path = Path::new(&out_dir).join("generated-commands.rs");
     let mut f = File::create(&dest_path).expect("Could not create generated-commands.rs");
 
-    let set = {
-        let mut set = HashSet::new();
-        set.insert("command");
-        set.insert("worktype");
-        set.insert("lib");
-        set
-    };
-
     let commands_dir = {
         let root = env::var("CARGO_MANIFEST_DIR").expect("Could not get CARGO_MANIFEST_DIR");
         let mut pathbuf = PathBuf::from(&root);
@@ -26,20 +18,33 @@ fn main() {
         pathbuf
     };
 
-    let iter = commands_dir
-        .read_dir()
-        .expect("Could not read command dir")
-        .filter_map(|x| Some(String::from(x.ok()?.path().file_stem()?.to_str()?)))
-        .filter(|x| !set.contains(x.as_str()));
-
+    // Write out module imports
     write!(f, "mods! [ ").expect(GCRS);
     let mut one = false;
-    for item in iter {
+    for item in get_mods(&commands_dir) {
         if one {
             write!(f, ", ").expect(GCRS);
         }
         write!(f, "{}", item).expect(GCRS);
         one = true;
     }
-    write!(f, " ];").expect(GCRS);
+    writeln!(f, " ];").expect(GCRS);
+
+    // Write out struct exports
+    for item in get_mods(&commands_dir) {
+        writeln!(f, "pub use {}::*;", item).expect(GCRS);
+    }
+}
+
+fn get_mods(path: &Path) -> impl Iterator<Item=String> {
+    let set = {
+        let mut set = HashSet::new();
+        set.insert("lib");
+        set
+    };
+
+    path.read_dir()
+        .expect("Could not read command dir")
+        .filter_map(|x| Some(String::from(x.ok()?.path().file_stem()?.to_str()?)))
+        .filter(move |x| !set.contains(x.as_str()))
 }

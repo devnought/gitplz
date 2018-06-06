@@ -17,7 +17,7 @@ impl StatusCommand {
     }
 }
 
-pub struct StatusCommandResult {
+struct StatusCommandResult {
     statuses: Vec<(PathBuf, Status)>,
     path: PathBuf,
 }
