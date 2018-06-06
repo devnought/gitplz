@@ -17,9 +17,9 @@ pub use worktype::{WorkResult, WorkType};
 
 include!(concat!(env!("OUT_DIR"), "/generated-commands.rs"));
 
-pub use checkout::CheckoutCommand;
 pub use branch_delete::BranchDeleteCommand;
 pub use branch_find::BranchFindCommand;
+pub use checkout::CheckoutCommand;
 pub use reset::ResetCommand;
 pub use status::StatusCommand;
 

@@ -20,8 +20,7 @@ use cli::{BranchOption, CommandArg, RunOption};
 mod dispatcher;
 use dispatcher::Dispatcher;
 
-use command::{BranchDeleteCommand, BranchFindCommand, CheckoutCommand, Command, ResetCommand,
-              StatusCommand, WorkType};
+use command::*;
 
 fn main() {
     let run_option = {
