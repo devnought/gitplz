@@ -1,19 +1,14 @@
-use super::{worktype::{WorkResult, WorkType},
-            Command};
+use super::{WorkResult, WorkType, Command, CommandBoxClone};
 use color_printer::{Color, ColorPrinter, ColorSpec};
 use gitlib::{GitRepo, Status};
 use std::{io::Write, path::PathBuf};
 
-#[derive(Clone)]
-pub struct StatusCommand {}
+#[derive(Clone, CommandBoxClone)]
+pub struct StatusCommand;
 
 impl StatusCommand {
     pub fn new() -> Self {
         Self {}
-    }
-
-    pub fn box_new() -> Box<Self> {
-        Box::new(Self::new())
     }
 }
 
@@ -44,10 +39,6 @@ impl Command for StatusCommand {
         });
 
         WorkType::result(index, result)
-    }
-
-    fn box_clone(&self) -> Box<Command> {
-        Box::new(self.clone())
     }
 }
 

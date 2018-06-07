@@ -1,10 +1,9 @@
-use super::{worktype::{WorkResult, WorkType},
-            Command};
+use super::{WorkResult, WorkType, Command, CommandBoxClone};
 use color_printer::{Color, ColorPrinter, ColorSpec};
 use gitlib::{self, GitRepo};
 use std::{io::Write, path::PathBuf};
 
-#[derive(Clone)]
+#[derive(Clone, CommandBoxClone)]
 pub struct BranchDeleteCommand {
     branch: String,
 }
@@ -12,10 +11,6 @@ pub struct BranchDeleteCommand {
 impl BranchDeleteCommand {
     pub fn new(branch: String) -> Self {
         Self { branch }
-    }
-
-    pub fn box_new(branch: String) -> Box<Self> {
-        Box::new(Self::new(branch))
     }
 }
 
@@ -42,10 +37,6 @@ impl Command for BranchDeleteCommand {
         };
 
         WorkType::result(index, Box::new(result))
-    }
-
-    fn box_clone(&self) -> Box<Command> {
-        Box::new(self.clone())
     }
 }
 

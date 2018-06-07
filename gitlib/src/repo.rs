@@ -55,13 +55,13 @@ impl GitRepo {
     }
 
     pub fn checkout(&self, branch_name: &str) -> Result<bool, Error> {
-        let components = branch_name.split("/").collect::<Vec<_>>();
+        let components = branch_name.split('/').collect::<Vec<_>>();
 
         let branch_type = match components.len() {
             0 => return Err(Error::ZeroSizedBranchName),
             1 => git2::BranchType::Local,
             _ => {
-                if let Ok(_) = self.repo.find_remote(&components[0]) {
+                if self.repo.find_remote(&components[0]).is_ok() {
                     git2::BranchType::Remote
                 } else {
                     git2::BranchType::Local

@@ -36,7 +36,7 @@ fn main() {
     }
 }
 
-fn get_mods(path: &Path) -> impl Iterator<Item=String> {
+fn get_mods(path: &Path) -> impl Iterator<Item = String> {
     let set = {
         let mut set = HashSet::new();
         set.insert("lib");

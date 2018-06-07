@@ -43,12 +43,12 @@ fn main() {
 
     let command: Box<Command> = match run_option {
         RunOption::Branch { branch, option } => match option {
-            BranchOption::Delete => BranchDeleteCommand::box_new(branch),
-            BranchOption::Find => BranchFindCommand::box_new(branch),
+            BranchOption::Delete => Box::new(BranchDeleteCommand::new(branch)),
+            BranchOption::Find => Box::new(BranchFindCommand::new(branch)),
         },
-        RunOption::Checkout { branch } => CheckoutCommand::box_new(branch),
-        RunOption::Reset => ResetCommand::box_new(),
-        RunOption::Status => StatusCommand::box_new(),
+        RunOption::Checkout { branch } => Box::new(CheckoutCommand::new(branch)),
+        RunOption::Reset => Box::new(ResetCommand::new()),
+        RunOption::Status => Box::new(StatusCommand::new()),
     };
 
     let pool = threadpool::Builder::new().build();

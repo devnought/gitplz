@@ -1,19 +1,14 @@
-use super::{worktype::{WorkResult, WorkType},
-            Command};
+use super::{WorkResult, WorkType, Command, CommandBoxClone};
 use color_printer::{Color, ColorPrinter, ColorSpec};
 use gitlib::{GitRepo, Status};
 use std::{fs, io::Write, path::PathBuf};
 
-#[derive(Clone)]
-pub struct ResetCommand {}
+#[derive(Clone, CommandBoxClone)]
+pub struct ResetCommand;
 
 impl ResetCommand {
     pub fn new() -> Self {
         Self {}
-    }
-
-    pub fn box_new() -> Box<Self> {
-        Box::new(Self::new())
     }
 }
 
@@ -69,10 +64,6 @@ impl Command for ResetCommand {
             head: head.name().into(),
         };
         WorkType::result(index, Box::new(result))
-    }
-
-    fn box_clone(&self) -> Box<Command> {
-        Box::new(self.clone())
     }
 }
 
