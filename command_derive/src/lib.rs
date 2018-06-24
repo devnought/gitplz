@@ -13,7 +13,7 @@ pub fn command_box_clone(input: TokenStream) -> TokenStream {
 
     let expanded = quote! {
         impl CommandBoxClone for #name {
-            fn box_clone(&self) -> Box<Command> {
+            fn box_clone(&self) -> Box<dyn Command> {
                 Box::new(self.clone())
             }
         }

@@ -8,13 +8,13 @@ const THREAD_SIGNAL: &str = "Could not signal main thread with WorkType::Work";
 pub struct Dispatcher<'a> {
     queue: BTreeMap<usize, Option<Box<WorkResult>>>,
     next_index: usize,
-    command: Box<Command>,
+    command: Box<dyn Command>,
     pool: &'a ThreadPool,
     printer: ColorPrinter<'a>,
 }
 
 impl<'a> Dispatcher<'a> {
-    pub fn new(pool: &'a ThreadPool, printer: ColorPrinter<'a>, command: Box<Command>) -> Self {
+    pub fn new(pool: &'a ThreadPool, printer: ColorPrinter<'a>, command: Box<dyn Command>) -> Self {
         Self {
             queue: BTreeMap::new(),
             next_index: 0,

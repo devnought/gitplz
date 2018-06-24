@@ -41,7 +41,7 @@ fn main() {
     let stream = color_printer::StandardStream::stdout(color_printer::ColorChoice::Auto);
     let printer = ColorPrinter::new(is_terminal, &stream);
 
-    let command: Box<Command> = match run_option {
+    let command: Box<dyn Command> = match run_option {
         RunOption::Branch { branch, option } => match option {
             BranchOption::Delete => Box::new(BranchDeleteCommand::new(branch)),
             BranchOption::Find => Box::new(BranchFindCommand::new(branch)),
