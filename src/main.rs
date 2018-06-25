@@ -7,8 +7,9 @@ extern crate gitlib;
 extern crate threadpool;
 extern crate util;
 
-use std::{env,
-          sync::mpsc::{channel, Receiver}};
+use std::{
+    env, sync::mpsc::{channel, Receiver},
+};
 
 use color_printer::ColorPrinter;
 use threadpool::ThreadPool;

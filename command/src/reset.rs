@@ -3,7 +3,7 @@ use color_printer::{Color, ColorPrinter, ColorSpec};
 use gitlib::{GitRepo, Status};
 use std::{fs, io::Write, path::PathBuf};
 
-#[derive(Clone, CommandBoxClone)]
+#[derive(Clone, CommandBoxClone, Default)]
 pub struct ResetCommand;
 
 impl ResetCommand {

@@ -34,8 +34,8 @@ pub enum Status {
 }
 
 impl Status {
-    fn new(status: &git2::Status) -> Self {
-        match *status {
+    fn new(status: git2::Status) -> Self {
+        match status {
             git2::Status::INDEX_NEW => Status::StagedNew,
             git2::Status::INDEX_MODIFIED => Status::StagedModified,
             git2::Status::INDEX_DELETED => Status::StagedDeleted,
@@ -55,14 +55,14 @@ impl Status {
 
 #[derive(Debug)]
 pub struct StatusEntryIter<'a> {
-    status: &'a git2::Status,
+    status: git2::Status,
     path: &'a Path,
     index: i8,
     multiple_statuses: bool,
 }
 
 impl<'a> StatusEntryIter<'a> {
-    pub(crate) fn new(path: &'a Path, status: &'a git2::Status) -> Self {
+    pub(crate) fn new(path: &'a Path, status: git2::Status) -> Self {
         Self {
             index: -1,
             status,
@@ -93,9 +93,9 @@ impl<'a> Iterator for StatusEntryIter<'a> {
                 return None;
             }
 
-            let check = &STATUS_COLLECTION[self.index as usize];
+            let check = STATUS_COLLECTION[self.index as usize];
 
-            if self.status.intersects(*check) {
+            if self.status.intersects(check) {
                 break Status::new(check);
             }
 

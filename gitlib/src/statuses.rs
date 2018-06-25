@@ -16,7 +16,12 @@ impl<'a> From<git2::Statuses<'a>> for Statuses<'a> {
 
 impl<'a> Statuses<'a> {
     pub fn iter(&self) -> StatusIter {
-        let iter: StatusIter = self.statuses.iter().filter_map(status_entry_map);
+        let iter: StatusIter = self.statuses.iter().filter_map(|x| {
+            let path = x.path()?.into();
+            let status = x.status();
+
+            Some(StatusEntry::new(path, status))
+        });
 
         iter
     }
@@ -24,11 +29,4 @@ impl<'a> Statuses<'a> {
     pub fn is_empty(&self) -> bool {
         self.statuses.is_empty()
     }
-}
-
-fn status_entry_map(entry: git2::StatusEntry) -> Option<StatusEntry> {
-    let path = entry.path()?.into();
-    let status = entry.status();
-
-    Some(StatusEntry::new(path, status))
 }
