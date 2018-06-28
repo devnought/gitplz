@@ -20,7 +20,7 @@ impl<'a> ColorPrinter<'a> {
 
     pub fn color_context<F>(&mut self, color_spec: &ColorSpec, func: F)
     where
-        F: Fn(&mut Write) -> (),
+        F: Fn(&mut dyn Write) -> (),
     {
         if !self.is_terminal {
             func(&mut self.handle);

@@ -7,7 +7,7 @@ authors = ["Kyle Gretchev <kgretchev@gmail.com>"]
 
 [dependencies]
 atty = "0.2.10"
-clap = { version = "2.31.2", default-features = false, features = [ "suggestions" ] }
+clap = { version = "2.32.0", default-features = false, features = [ "suggestions" ] }
 color_printer = { path = "color_printer" }
 command = { path = "command" }
 gitlib = { path = "gitlib" }

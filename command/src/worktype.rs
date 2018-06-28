@@ -14,7 +14,7 @@ pub enum WorkType {
     },
     Work {
         index: usize,
-        result: Box<WorkResult>,
+        result: Box<dyn WorkResult>,
     },
     WorkEmpty {
         index: usize,
@@ -22,7 +22,7 @@ pub enum WorkType {
 }
 
 impl WorkType {
-    pub fn result(index: usize, result: Box<WorkResult>) -> Self {
+    pub fn result(index: usize, result: Box<dyn WorkResult>) -> Self {
         WorkType::Work { index, result }
     }
 

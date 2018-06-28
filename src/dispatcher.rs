@@ -6,7 +6,7 @@ use threadpool::ThreadPool;
 const THREAD_SIGNAL: &str = "Could not signal main thread with WorkType::Work";
 
 pub struct Dispatcher<'a> {
-    queue: BTreeMap<usize, Option<Box<WorkResult>>>,
+    queue: BTreeMap<usize, Option<Box<dyn WorkResult>>>,
     next_index: usize,
     command: Box<dyn Command>,
     pool: &'a ThreadPool,
