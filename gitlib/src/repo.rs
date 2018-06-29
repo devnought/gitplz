@@ -55,22 +55,8 @@ impl GitRepo {
     }
 
     pub fn checkout(&self, branch_name: &str) -> Result<bool, Error> {
-        let components = branch_name.split('/').collect::<Vec<_>>();
-
-        let branch_type = match components.len() {
-            0 => return Err(Error::ZeroSizedBranchName),
-            1 => git2::BranchType::Local,
-            _ => {
-                if self.repo.find_remote(&components[0]).is_ok() {
-                    git2::BranchType::Remote
-                } else {
-                    git2::BranchType::Local
-                }
-            }
-        };
-
+        let branch_type = self.get_branch_type(branch_name)?;
         let branch = self.repo.find_branch(branch_name, branch_type)?;
-
         let obj = branch.get().peel(git2::ObjectType::Commit)?;
 
         match branch_type {
@@ -79,16 +65,44 @@ impl GitRepo {
         }
     }
 
-    fn checkout_local(&self, branch_name: &str, obj: &git2::Object) -> Result<bool, Error> {
-        let mut opts = git2::build::CheckoutBuilder::new();
+    pub fn delete_local_branch(&self, branch_name: &str) -> Result<(), Error> {
+        self.repo
+            .find_branch(branch_name, git2::BranchType::Local)?
+            .delete()?;
 
-        self.repo.checkout_tree(obj, Some(&mut opts))?;
+        Ok(())
+    }
+
+    pub fn has_local_branch(&self, branch_name: &str) -> Result<(), Error> {
+        self.repo.find_branch(branch_name, git2::BranchType::Local)?;
+
+        Ok(())
+    }
+
+    fn get_branch_type(&self, branch_name: &str) -> Result<git2::BranchType, Error> {
+        let components = branch_name.split('/').collect::<Vec<_>>();
+
+        match components.len() {
+            0 => Err(Error::ZeroSizedBranchName),
+            1 => Ok(git2::BranchType::Local),
+            _ => {
+                if self.repo.find_remote(&components[0]).is_ok() {
+                    Ok(git2::BranchType::Remote)
+                } else {
+                    Ok(git2::BranchType::Local)
+                }
+            }
+        }
+    }
+
+    fn checkout_local(&self, branch_name: &str, obj: &git2::Object) -> Result<bool, Error> {
+        self.repo.checkout_tree(obj, None)?;
 
         let branch_str = format!("refs/heads/{}", branch_name);
         let branch_ref = self.repo.find_reference(&branch_str)?;
 
         self.repo
-            .set_head(branch_ref.name().unwrap())
+            .set_head(branch_ref.name().expect("Error setting head"))
             .expect("Error setting head");
 
         Ok(true)
@@ -106,25 +120,13 @@ impl GitRepo {
             return Ok(false);
         }
 
-        self.repo.set_head_detached(obj.id()).expect("wut");
+        self.repo
+            .set_head_detached(obj.id())
+            .expect("Error setting head detatched");
         self.repo
             .reset(obj, git2::ResetType::Hard, None)
-            .expect("wuufttttt");
+            .expect("Reset error");
 
         Ok(true)
-    }
-
-    pub fn delete_local_branch(&self, branch_name: &str) -> Result<(), Error> {
-        self.repo
-            .find_branch(branch_name, git2::BranchType::Local)?
-            .delete()?;
-
-        Ok(())
-    }
-
-    pub fn has_local_branch(&self, branch_name: &str) -> Result<(), Error> {
-        self.repo.find_branch(branch_name, git2::BranchType::Local)?;
-
-        Ok(())
     }
 }
