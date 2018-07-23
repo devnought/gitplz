@@ -38,7 +38,7 @@ pub enum BranchOption {
     Find,
 }
 
-fn build_cli<'a, 'b>() -> App<'a, 'b> {
+fn build_cli() -> App<'a, 'b> {
     App::new("Git, please")
         .bin_name(APP_NAME)
         .version(crate_version!())

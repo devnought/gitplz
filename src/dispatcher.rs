@@ -13,7 +13,7 @@ pub struct Dispatcher<'a> {
     printer: ColorPrinter<'a>,
 }
 
-impl<'a> Dispatcher<'a> {
+impl Dispatcher<'a> {
     pub fn new(pool: &'a ThreadPool, printer: ColorPrinter<'a>, command: Box<dyn Command>) -> Self {
         Self {
             queue: BTreeMap::new(),

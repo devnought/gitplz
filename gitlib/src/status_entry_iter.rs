@@ -61,7 +61,7 @@ pub struct StatusEntryIter<'a> {
     multiple_statuses: bool,
 }
 
-impl<'a> StatusEntryIter<'a> {
+impl StatusEntryIter<'a> {
     pub(crate) fn new(path: &'a Path, status: git2::Status) -> Self {
         Self {
             index: -1,
@@ -72,7 +72,7 @@ impl<'a> StatusEntryIter<'a> {
     }
 }
 
-impl<'a> Iterator for StatusEntryIter<'a> {
+impl Iterator for StatusEntryIter<'a> {
     type Item = (&'a Path, Status);
 
     fn next(&mut self) -> Option<Self::Item> {
