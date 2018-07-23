@@ -14,7 +14,11 @@ crate struct Dispatcher<'a> {
 }
 
 impl Dispatcher<'a> {
-    crate fn new(pool: &'a ThreadPool, printer: ColorPrinter<'a>, command: Box<dyn Command>) -> Self {
+    crate fn new(
+        pool: &'a ThreadPool,
+        printer: ColorPrinter<'a>,
+        command: Box<dyn Command>,
+    ) -> Self {
         Self {
             queue: BTreeMap::new(),
             next_index: 0,
