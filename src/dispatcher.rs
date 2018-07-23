@@ -5,7 +5,7 @@ use threadpool::ThreadPool;
 
 const THREAD_SIGNAL: &str = "Could not signal main thread with WorkType::Work";
 
-pub struct Dispatcher<'a> {
+crate struct Dispatcher<'a> {
     queue: BTreeMap<usize, Option<Box<dyn WorkResult>>>,
     next_index: usize,
     command: Box<dyn Command>,
@@ -14,7 +14,7 @@ pub struct Dispatcher<'a> {
 }
 
 impl Dispatcher<'a> {
-    pub fn new(pool: &'a ThreadPool, printer: ColorPrinter<'a>, command: Box<dyn Command>) -> Self {
+    crate fn new(pool: &'a ThreadPool, printer: ColorPrinter<'a>, command: Box<dyn Command>) -> Self {
         Self {
             queue: BTreeMap::new(),
             next_index: 0,
@@ -24,7 +24,7 @@ impl Dispatcher<'a> {
         }
     }
 
-    pub fn run(&mut self, rx: &Receiver<WorkType>) {
+    crate fn run(&mut self, rx: &Receiver<WorkType>) {
         while let Ok(result) = rx.recv() {
             match result {
                 WorkType::Repo { index, repo, tx } => {

@@ -13,14 +13,14 @@ const FIND: &str = "find";
 const SHELL: &str = "shell";
 
 #[derive(Debug)]
-pub enum CommandArg {
+crate enum CommandArg {
     Completions { shell: Shell },
     Help,
     Run { option: RunOption },
 }
 
 #[derive(Debug)]
-pub enum RunOption {
+crate enum RunOption {
     Branch {
         branch: String,
         option: BranchOption,
@@ -33,7 +33,7 @@ pub enum RunOption {
 }
 
 #[derive(Debug)]
-pub enum BranchOption {
+crate enum BranchOption {
     Delete,
     Find,
 }
@@ -85,7 +85,7 @@ fn build_cli() -> App<'a, 'b> {
         )
 }
 
-pub fn handle_args() -> CommandArg {
+crate fn handle_args() -> CommandArg {
     let matches = build_cli().get_matches();
 
     match matches.subcommand() {
@@ -127,11 +127,11 @@ pub fn handle_args() -> CommandArg {
     }
 }
 
-pub fn gen_completions_for(shell: Shell) {
+crate fn gen_completions_for(shell: Shell) {
     build_cli().gen_completions_to(APP_NAME, shell, &mut io::stdout())
 }
 
-pub fn print_help() {
+crate fn print_help() {
     build_cli()
         .print_help()
         .expect("Could not print command line help message");

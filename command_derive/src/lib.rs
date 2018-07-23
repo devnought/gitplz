@@ -1,4 +1,5 @@
 #![feature(rust_2018_preview)]
+#![warn(rust_2018_idioms)]
 
 use proc_macro::TokenStream;
 use quote::{quote, quote_each_token, quote_spanned};
