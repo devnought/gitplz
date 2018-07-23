@@ -1,7 +1,7 @@
 use gitlib::GitRepo;
 use std::path::PathBuf;
 
-use repo_iter_state::RepoIterState;
+use crate::repo_iter_state::RepoIterState;
 
 pub struct RepoIter {
     state: RepoIterState,

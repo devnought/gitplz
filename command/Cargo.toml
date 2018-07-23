@@ -1,4 +1,7 @@
+cargo-features = ["edition"]
+
 [package]
+edition = "2018"
 name = "command"
 version = "0.1.0"
 authors = ["Kyle Gretchev <kgretchev@gmail.com>"]

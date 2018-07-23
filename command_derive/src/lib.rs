@@ -1,9 +1,7 @@
-extern crate proc_macro;
-extern crate syn;
-#[macro_use]
-extern crate quote;
+#![feature(rust_2018_preview)]
 
 use proc_macro::TokenStream;
+use quote::{quote, quote_each_token, quote_spanned};
 use syn::DeriveInput;
 
 #[proc_macro_derive(CommandBoxClone)]

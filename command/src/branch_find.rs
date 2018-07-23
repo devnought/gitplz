@@ -1,7 +1,9 @@
-use super::{WorkResult, WorkType, Command, CommandBoxClone};
+use crate::{WorkResult, WorkType, Command};
 use color_printer::{Color, ColorPrinter, ColorSpec};
 use gitlib::GitRepo;
 use std::{io::Write, path::PathBuf};
+use command_derive::CommandBoxClone;
+use crate::command::CommandBoxClone;
 
 #[derive(Clone, CommandBoxClone)]
 pub struct BranchFindCommand {

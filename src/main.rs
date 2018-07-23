@@ -1,14 +1,8 @@
-extern crate atty;
-#[macro_use]
-extern crate clap;
-extern crate color_printer;
-extern crate command;
-extern crate gitlib;
-extern crate threadpool;
-extern crate util;
+#![feature(rust_2018_preview)]
 
 use std::{
-    env, sync::mpsc::{channel, Receiver},
+    env,
+    sync::mpsc::{channel, Receiver},
 };
 
 use color_printer::ColorPrinter;
@@ -16,10 +10,10 @@ use threadpool::ThreadPool;
 use util::RepoIter;
 
 mod cli;
-use cli::{BranchOption, CommandArg, RunOption};
+use crate::cli::{BranchOption, CommandArg, RunOption};
 
 mod dispatcher;
-use dispatcher::Dispatcher;
+use crate::dispatcher::Dispatcher;
 
 use command::*;
 

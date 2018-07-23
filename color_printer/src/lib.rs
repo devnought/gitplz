@@ -1,4 +1,4 @@
-extern crate termcolor;
+#![feature(rust_2018_preview)]
 
 use std::io::{self, Write};
 use termcolor::{StandardStreamLock, WriteColor};

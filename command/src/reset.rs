@@ -1,7 +1,9 @@
-use super::{WorkResult, WorkType, Command, CommandBoxClone};
+use crate::{WorkResult, WorkType, Command};
 use color_printer::{Color, ColorPrinter, ColorSpec};
 use gitlib::{GitRepo, Status};
 use std::{fs, io::Write, path::PathBuf};
+use command_derive::CommandBoxClone;
+use crate::command::CommandBoxClone;
 
 #[derive(Clone, CommandBoxClone, Default)]
 pub struct ResetCommand;

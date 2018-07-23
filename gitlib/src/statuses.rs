@@ -1,4 +1,5 @@
-use super::{git2, StatusEntry};
+use crate::StatusEntry;
+use git2;
 use std::iter::FilterMap;
 
 pub type StatusIter<'a> =

@@ -1,4 +1,4 @@
-use clap::{App, Arg, ArgGroup, Shell, SubCommand};
+use clap::{crate_authors, crate_version, value_t, App, Arg, ArgGroup, Shell, SubCommand};
 use std::io;
 
 const APP_NAME: &str = "git plz";

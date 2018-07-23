@@ -1,4 +1,5 @@
-use super::{git2, Error, Reference, Statuses};
+use crate::{Error, Reference, Statuses};
+use git2;
 use std::path::{Path, PathBuf};
 
 pub struct GitRepo {
@@ -109,7 +110,8 @@ impl GitRepo {
     }
 
     fn checkout_remote(&self, obj: &git2::Object) -> Result<bool, Error> {
-        let head_id = self.repo
+        let head_id = self
+            .repo
             .head()
             .expect("Could not resolve head")
             .peel(git2::ObjectType::Any)

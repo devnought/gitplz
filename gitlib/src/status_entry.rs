@@ -1,4 +1,5 @@
-use super::{git2, StatusEntryIter};
+use crate::StatusEntryIter;
+use git2;
 use std::path::{Path, PathBuf};
 
 #[derive(Debug)]

@@ -1,8 +1,8 @@
-extern crate gitlib;
+#![feature(rust_2018_preview)]
 
 mod repo_iter;
 mod repo_iter_state;
-pub use repo_iter::RepoIter;
+pub use crate::repo_iter::RepoIter;
 
 #[cfg(test)]
 mod tests {

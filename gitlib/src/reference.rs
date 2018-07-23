@@ -1,4 +1,5 @@
-use super::{git2, Error};
+use crate::Error;
+use git2;
 
 pub struct Reference {
     name: String,
