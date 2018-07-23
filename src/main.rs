@@ -1,66 +1,54 @@
-extern crate atty;
-#[macro_use]
-extern crate clap;
-extern crate color_printer;
-extern crate command;
-extern crate gitlib;
-extern crate threadpool;
-extern crate util;
+#![warn(rust_2018_idioms)]
 
-use std::{
-    env, sync::mpsc::{channel, Receiver},
-};
+mod cli;
+mod dispatcher;
 
 use color_printer::ColorPrinter;
+use command::*;
+use crate::{cli::RunOption, dispatcher::Dispatcher};
+use std::{
+    env,
+    path::PathBuf,
+    sync::mpsc::{channel, Receiver},
+};
 use threadpool::ThreadPool;
 use util::RepoIter;
 
-mod cli;
-use cli::{BranchOption, CommandArg, RunOption};
-
-mod dispatcher;
-use dispatcher::Dispatcher;
-
-use command::*;
-
 fn main() {
-    let run_option = {
-        match cli::handle_args() {
-            CommandArg::Help => {
-                cli::print_help();
-                return;
-            }
-            CommandArg::Completions { shell } => {
-                cli::gen_completions_for(shell);
-                return;
-            }
-            CommandArg::Run { option } => option,
-        }
-    };
+    let run_option = cli::handle_args();
+    let working_path = run_option
+        .path()
+        .map(|x| x.into())
+        .unwrap_or_else(|| env::current_dir().expect("Could not get working directory"));
 
     let is_terminal = atty::is(atty::Stream::Stdout);
     let stream = color_printer::StandardStream::stdout(color_printer::ColorChoice::Auto);
     let printer = ColorPrinter::new(is_terminal, &stream);
 
     let command: Box<dyn Command> = match run_option {
-        RunOption::Branch { branch, option } => match option {
-            BranchOption::Delete => Box::new(BranchDeleteCommand::new(branch)),
-            BranchOption::Find => Box::new(BranchFindCommand::new(branch)),
-        },
-        RunOption::Checkout { branch } => Box::new(CheckoutCommand::new(branch)),
-        RunOption::Reset => Box::new(ResetCommand::new()),
-        RunOption::Status => Box::new(StatusCommand::new()),
+        RunOption::Branch { delete, find, .. } => {
+            // TODO: This needs to be an enum again
+            if let Some(branch) = delete {
+                Box::new(BranchDeleteCommand::new(branch))
+            } else if let Some(branch) = find {
+                Box::new(BranchFindCommand::new(branch))
+            } else {
+                panic!("Invalid branch option");
+            }
+        }
+        RunOption::Checkout { branch, .. } => Box::new(CheckoutCommand::new(branch)),
+        RunOption::Reset { .. } => Box::new(ResetCommand::new()),
+        RunOption::Status { .. } => Box::new(StatusCommand::new()),
     };
 
     let pool = threadpool::Builder::new().build();
-    let rx = start_repo_iter(&pool);
+    let rx = start_repo_iter(working_path, &pool);
 
     let mut dispatcher = Dispatcher::new(&pool, printer, command);
     dispatcher.run(&rx);
 }
 
-fn start_repo_iter(pool: &ThreadPool) -> Receiver<WorkType> {
-    let working_dir = env::current_dir().expect("Could not get working directory");
+fn start_repo_iter(working_dir: PathBuf, pool: &ThreadPool) -> Receiver<WorkType> {
     let (tx, rx) = channel();
     let tx_send = tx.clone();
 

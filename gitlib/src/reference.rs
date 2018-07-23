@@ -1,11 +1,12 @@
-use super::{git2, Error};
+use crate::Error;
+use git2;
 
 pub struct Reference {
     name: String,
 }
 
 impl Reference {
-    pub fn new(reference: &git2::Reference) -> Result<Self, Error> {
+    pub fn new(reference: &git2::Reference<'_>) -> Result<Self, Error> {
         Ok(Self {
             name: reference
                 .name()

@@ -1,8 +1,11 @@
 use std::{
-    fs::{DirEntry, ReadDir}, io, iter::Filter, path::PathBuf,
+    fs::{DirEntry, ReadDir},
+    io,
+    iter::Filter,
+    path::PathBuf,
 };
 
-pub type InternalRepoIter = Filter<ReadDir, fn(&io::Result<DirEntry>) -> bool>;
+type InternalRepoIter = Filter<ReadDir, fn(&io::Result<DirEntry>) -> bool>;
 
 pub struct RepoIterState {
     pending: Vec<PathBuf>,

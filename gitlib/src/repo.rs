@@ -1,4 +1,5 @@
-use super::{git2, Error, Reference, Statuses};
+use crate::{Error, Reference, Statuses};
+use git2;
 use std::path::{Path, PathBuf};
 
 pub struct GitRepo {
@@ -29,7 +30,7 @@ impl GitRepo {
         &self.path
     }
 
-    pub fn statuses(&self) -> Result<Statuses, Error> {
+    pub fn statuses(&self) -> Result<Statuses<'_>, Error> {
         let mut opts = git2::StatusOptions::new();
 
         opts.include_ignored(false)
@@ -74,7 +75,8 @@ impl GitRepo {
     }
 
     pub fn has_local_branch(&self, branch_name: &str) -> Result<(), Error> {
-        self.repo.find_branch(branch_name, git2::BranchType::Local)?;
+        self.repo
+            .find_branch(branch_name, git2::BranchType::Local)?;
 
         Ok(())
     }
@@ -95,7 +97,7 @@ impl GitRepo {
         }
     }
 
-    fn checkout_local(&self, branch_name: &str, obj: &git2::Object) -> Result<bool, Error> {
+    fn checkout_local(&self, branch_name: &str, obj: &git2::Object<'_>) -> Result<bool, Error> {
         self.repo.checkout_tree(obj, None)?;
 
         let branch_str = format!("refs/heads/{}", branch_name);
@@ -108,8 +110,9 @@ impl GitRepo {
         Ok(true)
     }
 
-    fn checkout_remote(&self, obj: &git2::Object) -> Result<bool, Error> {
-        let head_id = self.repo
+    fn checkout_remote(&self, obj: &git2::Object<'_>) -> Result<bool, Error> {
+        let head_id = self
+            .repo
             .head()
             .expect("Could not resolve head")
             .peel(git2::ObjectType::Any)

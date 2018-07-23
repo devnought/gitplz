@@ -3,7 +3,7 @@ use gitlib::GitRepo;
 use std::{marker::Send, sync::mpsc::Sender};
 
 pub trait WorkResult: Send {
-    fn print(&self, printer: &mut ColorPrinter);
+    fn print(&self, printer: &mut ColorPrinter<'_>);
 }
 
 pub enum WorkType {

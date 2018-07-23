@@ -1,5 +1,6 @@
-use super::{WorkResult, WorkType, Command, CommandBoxClone};
 use color_printer::{Color, ColorPrinter, ColorSpec};
+use command_derive::CommandBoxClone;
+use crate::{Command, CommandBoxClone, WorkOption, WorkResult};
 use gitlib::GitRepo;
 use std::{io::Write, path::PathBuf};
 
@@ -20,21 +21,22 @@ struct CheckoutCommandResult {
 }
 
 impl Command for CheckoutCommand {
-    fn process(&self, index: usize, repo: GitRepo) -> WorkType {
+    fn process(&self, repo: GitRepo) -> WorkOption {
         if let Ok(true) = repo.checkout(&self.branch) {
             let result = CheckoutCommandResult {
                 path: repo.path().into(),
                 branch: self.branch.clone(),
             };
-            WorkType::result(index, Box::new(result))
+
+            Some(Box::new(result))
         } else {
-            WorkType::empty(index)
+            None
         }
     }
 }
 
 impl WorkResult for CheckoutCommandResult {
-    fn print(&self, printer: &mut ColorPrinter) {
+    fn print(&self, printer: &mut ColorPrinter<'_>) {
         let mut cs = ColorSpec::new();
         cs.set_intense(true);
         cs.set_fg(Some(Color::Yellow));

@@ -1,4 +1,4 @@
-extern crate git2;
+#![warn(rust_2018_idioms)]
 
 #[derive(Debug)]
 pub enum Error {
@@ -58,19 +58,19 @@ impl From<git2::Error> for Error {
 }
 
 mod reference;
-pub use reference::Reference;
+pub use crate::reference::Reference;
 
 mod repo;
-pub use repo::GitRepo;
+pub use crate::repo::GitRepo;
 
 mod status_entry;
-pub use status_entry::StatusEntry;
+pub use crate::status_entry::StatusEntry;
 
 mod statuses;
-pub use statuses::{StatusIter, Statuses};
+pub use crate::statuses::{StatusIter, Statuses};
 
 mod status_entry_iter;
-pub use status_entry_iter::{Status, StatusEntryIter};
+pub use crate::status_entry_iter::{Status, StatusEntryIter};
 
 #[cfg(test)]
 mod tests {

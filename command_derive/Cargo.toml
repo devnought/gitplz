@@ -1,4 +1,5 @@
 [package]
+edition = "2018"
 name = "command_derive"
 version = "0.1.0"
 authors = ["Kyle Gretchev <kyle.gretchev@magnetforensics.com>"]
@@ -7,5 +8,5 @@ authors = ["Kyle Gretchev <kyle.gretchev@magnetforensics.com>"]
 proc-macro = true
 
 [dependencies]
-quote = "0.6.3"
-syn = { version = "0.14.4", default-features = false, features = [ "derive", "full", "parsing", "printing", "visit", "visit-mut", "fold", "clone-impls", "extra-traits", "proc-macro" ] }
+quote = "0.6.8"
+syn = { version = "0.15.4", default-features = false, features = [ "derive", "full", "parsing", "printing", "visit", "visit-mut", "fold", "clone-impls", "extra-traits", "proc-macro" ] }

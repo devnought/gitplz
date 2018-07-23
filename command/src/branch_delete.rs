@@ -1,5 +1,6 @@
-use super::{WorkResult, WorkType, Command, CommandBoxClone};
 use color_printer::{Color, ColorPrinter, ColorSpec};
+use command_derive::CommandBoxClone;
+use crate::{Command, CommandBoxClone, WorkOption, WorkResult};
 use gitlib::{self, GitRepo};
 use std::{io::Write, path::PathBuf};
 
@@ -21,14 +22,14 @@ struct BranchDeleteCommandResult {
 }
 
 impl Command for BranchDeleteCommand {
-    fn process(&self, index: usize, repo: GitRepo) -> WorkType {
+    fn process(&self, repo: GitRepo) -> WorkOption {
         let result = match repo.delete_local_branch(&self.branch) {
             Ok(()) => BranchDeleteCommandResult {
                 path: repo.path().into(),
                 branch: self.branch.clone(),
                 error: None,
             },
-            Err(gitlib::Error::NotFound) => return WorkType::empty(index),
+            Err(gitlib::Error::NotFound) => return None,
             Err(e) => BranchDeleteCommandResult {
                 path: repo.path().into(),
                 branch: self.branch.clone(),
@@ -36,12 +37,12 @@ impl Command for BranchDeleteCommand {
             },
         };
 
-        WorkType::result(index, Box::new(result))
+        Some(Box::new(result))
     }
 }
 
 impl WorkResult for BranchDeleteCommandResult {
-    fn print(&self, printer: &mut ColorPrinter) {
+    fn print(&self, printer: &mut ColorPrinter<'_>) {
         let mut cs = ColorSpec::new();
         cs.set_intense(true);
         cs.set_fg(Some(Color::Red));

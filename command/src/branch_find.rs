@@ -1,5 +1,6 @@
-use super::{WorkResult, WorkType, Command, CommandBoxClone};
 use color_printer::{Color, ColorPrinter, ColorSpec};
+use command_derive::CommandBoxClone;
+use crate::{Command, CommandBoxClone, WorkOption, WorkResult};
 use gitlib::GitRepo;
 use std::{io::Write, path::PathBuf};
 
@@ -20,22 +21,22 @@ struct BranchFindCommandResult {
 }
 
 impl Command for BranchFindCommand {
-    fn process(&self, index: usize, repo: GitRepo) -> WorkType {
+    fn process(&self, repo: GitRepo) -> WorkOption {
         if let Ok(()) = repo.has_local_branch(&self.branch) {
             let result = Box::new(BranchFindCommandResult {
                 branch: self.branch.clone(),
                 path: repo.path().into(),
             });
 
-            WorkType::result(index, result)
+            Some(result)
         } else {
-            WorkType::empty(index)
+            None
         }
     }
 }
 
 impl WorkResult for BranchFindCommandResult {
-    fn print(&self, printer: &mut ColorPrinter) {
+    fn print(&self, printer: &mut ColorPrinter<'_>) {
         let mut cs = ColorSpec::new();
         cs.set_intense(true);
         cs.set_fg(Some(Color::Green));

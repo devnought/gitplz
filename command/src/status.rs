@@ -1,5 +1,6 @@
-use super::{WorkResult, WorkType, Command, CommandBoxClone};
 use color_printer::{Color, ColorPrinter, ColorSpec};
+use command_derive::CommandBoxClone;
+use crate::{Command, CommandBoxClone, WorkOption, WorkResult};
 use gitlib::{GitRepo, Status};
 use std::{io::Write, path::PathBuf};
 
@@ -18,10 +19,10 @@ struct StatusCommandResult {
 }
 
 impl Command for StatusCommand {
-    fn process(&self, index: usize, repo: GitRepo) -> WorkType {
+    fn process(&self, repo: GitRepo) -> WorkOption {
         let statuses = match repo.statuses() {
-            Err(_) => return WorkType::empty(index),
-            Ok(ref s) if s.is_empty() => return WorkType::empty(index),
+            Err(_) => return None,
+            Ok(ref s) if s.is_empty() => return None,
             Ok(s) => s,
         };
 
@@ -38,12 +39,12 @@ impl Command for StatusCommand {
             statuses: result,
         });
 
-        WorkType::result(index, result)
+        Some(result)
     }
 }
 
 impl WorkResult for StatusCommandResult {
-    fn print(&self, printer: &mut ColorPrinter) {
+    fn print(&self, printer: &mut ColorPrinter<'_>) {
         writeln!(printer, "{}", self.path.display()).expect("write fail");
 
         let mut cs = ColorSpec::new();

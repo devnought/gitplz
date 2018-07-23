@@ -30,7 +30,11 @@ impl<'a> Dispatcher<'a> {
                 WorkType::Repo { index, repo, tx } => {
                     let worker = self.command.box_clone();
                     self.pool.execute(move || {
-                        let result = worker.process(index, repo);
+                        let result = match worker.process(repo) {
+                            Some(r) => WorkType::result(index, r),
+                            None => WorkType::empty(index),
+                        };
+
                         tx.send(result).expect(THREAD_SIGNAL)
                     })
                 }

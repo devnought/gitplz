@@ -1,7 +1,4 @@
-extern crate color_printer;
-#[macro_use]
-extern crate command_derive;
-extern crate gitlib;
+#![warn(rust_2018_idioms)]
 
 macro_rules! mods {
     ( $( $x:ident ),* ) => {

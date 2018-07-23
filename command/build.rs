@@ -32,7 +32,7 @@ fn main() {
 
     // Write out struct exports
     for item in get_mods(&commands_dir) {
-        writeln!(f, "pub use {}::*;", item).expect(GCRS);
+        writeln!(f, "pub use crate::{}::*;", item).expect(GCRS);
     }
 }
 

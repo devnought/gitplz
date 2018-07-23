@@ -1,7 +1,8 @@
 [package]
+edition = "2018"
 name = "color_printer"
 version = "0.1.0"
 authors = ["Kyle Gretchev <kgretchev@gmail.com>"]
 
 [dependencies]
-termcolor = "1.0.0"
+termcolor = "1.0.4"

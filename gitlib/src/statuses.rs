@@ -1,4 +1,5 @@
-use super::{git2, StatusEntry};
+use crate::StatusEntry;
+use git2;
 use std::iter::FilterMap;
 
 pub type StatusIter<'a> =
@@ -15,8 +16,8 @@ impl<'a> From<git2::Statuses<'a>> for Statuses<'a> {
 }
 
 impl<'a> Statuses<'a> {
-    pub fn iter(&self) -> StatusIter {
-        let iter: StatusIter = self.statuses.iter().filter_map(|x| {
+    pub fn iter(&self) -> StatusIter<'_> {
+        let iter: StatusIter<'_> = self.statuses.iter().filter_map(|x| {
             let path = x.path()?.into();
             let status = x.status();
 

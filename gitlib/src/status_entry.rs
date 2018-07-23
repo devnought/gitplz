@@ -1,4 +1,5 @@
-use super::{git2, StatusEntryIter};
+use crate::StatusEntryIter;
+use git2;
 use std::path::{Path, PathBuf};
 
 #[derive(Debug)]
@@ -16,7 +17,7 @@ impl StatusEntry {
         &self.path
     }
 
-    pub fn iter(&self) -> StatusEntryIter {
+    pub fn iter(&self) -> StatusEntryIter<'_> {
         StatusEntryIter::new(&self.path, self.status)
     }
 }
