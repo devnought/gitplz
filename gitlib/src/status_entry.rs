@@ -17,7 +17,7 @@ impl StatusEntry {
         &self.path
     }
 
-    pub fn iter(&self) -> StatusEntryIter {
+    pub fn iter(&self) -> StatusEntryIter<'_> {
         StatusEntryIter::new(&self.path, self.status)
     }
 }

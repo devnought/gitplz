@@ -70,7 +70,7 @@ impl Command for ResetCommand {
 }
 
 impl WorkResult for ResetCommandResult {
-    fn print(&self, printer: &mut ColorPrinter) {
+    fn print(&self, printer: &mut ColorPrinter<'_>) {
         let mut cs = ColorSpec::new();
         cs.set_intense(true);
         cs.set_fg(Some(Color::Yellow));

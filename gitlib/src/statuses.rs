@@ -16,8 +16,8 @@ impl From<git2::Statuses<'a>> for Statuses<'a> {
 }
 
 impl Statuses<'a> {
-    pub fn iter(&self) -> StatusIter {
-        let iter: StatusIter = self.statuses.iter().filter_map(|x| {
+    pub fn iter(&self) -> StatusIter<'_> {
+        let iter: StatusIter<'_> = self.statuses.iter().filter_map(|x| {
             let path = x.path()?.into();
             let status = x.status();
 

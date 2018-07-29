@@ -30,7 +30,7 @@ impl GitRepo {
         &self.path
     }
 
-    pub fn statuses(&self) -> Result<Statuses, Error> {
+    pub fn statuses(&self) -> Result<Statuses<'_>, Error> {
         let mut opts = git2::StatusOptions::new();
 
         opts.include_ignored(false)
@@ -96,7 +96,7 @@ impl GitRepo {
         }
     }
 
-    fn checkout_local(&self, branch_name: &str, obj: &git2::Object) -> Result<bool, Error> {
+    fn checkout_local(&self, branch_name: &str, obj: &git2::Object<'_>) -> Result<bool, Error> {
         self.repo.checkout_tree(obj, None)?;
 
         let branch_str = format!("refs/heads/{}", branch_name);
@@ -109,7 +109,7 @@ impl GitRepo {
         Ok(true)
     }
 
-    fn checkout_remote(&self, obj: &git2::Object) -> Result<bool, Error> {
+    fn checkout_remote(&self, obj: &git2::Object<'_>) -> Result<bool, Error> {
         let head_id = self
             .repo
             .head()

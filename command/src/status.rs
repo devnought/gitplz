@@ -45,7 +45,7 @@ impl Command for StatusCommand {
 }
 
 impl WorkResult for StatusCommandResult {
-    fn print(&self, printer: &mut ColorPrinter) {
+    fn print(&self, printer: &mut ColorPrinter<'_>) {
         writeln!(printer, "{}", self.path.display()).expect("write fail");
 
         let mut cs = ColorSpec::new();

@@ -68,7 +68,7 @@ dependencies = [
 
 [[package]]
 name = "curl-sys"
-version = "0.4.6"
+version = "0.4.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "cc 1.0.18 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -136,7 +136,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "cc 1.0.18 (registry+https://github.com/rust-lang/crates.io-index)",
  "cmake 0.1.31 (registry+https://github.com/rust-lang/crates.io-index)",
- "curl-sys 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)",
+ "curl-sys 0.4.7 (registry+https://github.com/rust-lang/crates.io-index)",
  "libc 0.2.42 (registry+https://github.com/rust-lang/crates.io-index)",
  "libssh2-sys 0.2.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "libz-sys 1.0.18 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -372,7 +372,7 @@ dependencies = [
 "checksum cfg-if 0.1.4 (registry+https://github.com/rust-lang/crates.io-index)" = "efe5c877e17a9c717a0bf3613b2709f723202c4e4675cc8f12926ded29bcb17e"
 "checksum clap 2.32.0 (registry+https://github.com/rust-lang/crates.io-index)" = "b957d88f4b6a63b9d70d5f454ac8011819c6efa7727858f458ab71c756ce2d3e"
 "checksum cmake 0.1.31 (registry+https://github.com/rust-lang/crates.io-index)" = "95470235c31c726d72bf2e1f421adc1e65b9d561bf5529612cbe1a72da1467b3"
-"checksum curl-sys 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)" = "db735aaa19154d8d4ba28e4a3546e90f13a14016a7a8ac10c799bae6929c00a4"
+"checksum curl-sys 0.4.7 (registry+https://github.com/rust-lang/crates.io-index)" = "de9cf174efdf90b5887c4e2e900769373c89c5e18152e8f3ed75b501a6f1c0fb"
 "checksum git2 0.7.3 (registry+https://github.com/rust-lang/crates.io-index)" = "0b87cffac882c99f9654ca5eb4c6c61527b47bc1e113304f8c57333567cd31f2"
 "checksum idna 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)" = "38f09e0f0b1fb55fdee1f17470ad800da77af5186a1a76c026b679358b7e844e"
 "checksum libc 0.2.42 (registry+https://github.com/rust-lang/crates.io-index)" = "b685088df2b950fccadf07a7187c8ef846a959c142338a48f9dc0b94517eb5f1"
