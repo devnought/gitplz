@@ -1,9 +1,9 @@
-use crate::{WorkResult, WorkType, Command};
+use crate::{WorkResult, Command};
 use color_printer::{Color, ColorPrinter, ColorSpec};
 use gitlib::{self, GitRepo};
 use std::{io::Write, path::PathBuf};
 use command_derive::CommandBoxClone;
-use crate::command::CommandBoxClone;
+use crate::command::{CommandBoxClone, WorkOption};
 
 #[derive(Clone, CommandBoxClone)]
 pub struct BranchDeleteCommand {
@@ -23,14 +23,14 @@ struct BranchDeleteCommandResult {
 }
 
 impl Command for BranchDeleteCommand {
-    fn process(&self, index: usize, repo: GitRepo) -> WorkType {
+    fn process(&self, repo: GitRepo) -> WorkOption {
         let result = match repo.delete_local_branch(&self.branch) {
             Ok(()) => BranchDeleteCommandResult {
                 path: repo.path().into(),
                 branch: self.branch.clone(),
                 error: None,
             },
-            Err(gitlib::Error::NotFound) => return WorkType::empty(index),
+            Err(gitlib::Error::NotFound) => return None,
             Err(e) => BranchDeleteCommandResult {
                 path: repo.path().into(),
                 branch: self.branch.clone(),
@@ -38,7 +38,7 @@ impl Command for BranchDeleteCommand {
             },
         };
 
-        WorkType::result(index, Box::new(result))
+        Some(Box::new(result))
     }
 }
 

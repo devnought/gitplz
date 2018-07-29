@@ -1,9 +1,9 @@
-use crate::{WorkResult, WorkType, Command};
+use crate::{WorkResult, Command};
 use color_printer::{Color, ColorPrinter, ColorSpec};
 use gitlib::GitRepo;
 use std::{io::Write, path::PathBuf};
 use command_derive::CommandBoxClone;
-use crate::command::CommandBoxClone;
+use crate::command::{CommandBoxClone, WorkOption};
 
 #[derive(Clone, CommandBoxClone)]
 pub struct CheckoutCommand {
@@ -22,15 +22,16 @@ struct CheckoutCommandResult {
 }
 
 impl Command for CheckoutCommand {
-    fn process(&self, index: usize, repo: GitRepo) -> WorkType {
+    fn process(&self, repo: GitRepo) -> WorkOption {
         if let Ok(true) = repo.checkout(&self.branch) {
             let result = CheckoutCommandResult {
                 path: repo.path().into(),
                 branch: self.branch.clone(),
             };
-            WorkType::result(index, Box::new(result))
+            
+            Some(Box::new(result))
         } else {
-            WorkType::empty(index)
+            None
         }
     }
 }

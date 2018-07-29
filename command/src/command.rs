@@ -1,10 +1,12 @@
 use gitlib::GitRepo;
-use crate::worktype::WorkType;
+use crate::worktype::WorkResult;
 
 pub trait CommandBoxClone {
     fn box_clone(&self) -> Box<dyn Command>;
 }
 
 pub trait Command: Send + CommandBoxClone {
-    fn process(&self, index: usize, repo: GitRepo) -> WorkType;
+    fn process(&self, repo: GitRepo) -> WorkOption;
 }
+
+pub type WorkOption = Option<Box<dyn WorkResult>>;

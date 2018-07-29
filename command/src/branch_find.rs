@@ -1,9 +1,9 @@
-use crate::{WorkResult, WorkType, Command};
+use crate::{WorkResult, Command};
 use color_printer::{Color, ColorPrinter, ColorSpec};
 use gitlib::GitRepo;
 use std::{io::Write, path::PathBuf};
 use command_derive::CommandBoxClone;
-use crate::command::CommandBoxClone;
+use crate::command::{CommandBoxClone, WorkOption};
 
 #[derive(Clone, CommandBoxClone)]
 pub struct BranchFindCommand {
@@ -22,16 +22,16 @@ struct BranchFindCommandResult {
 }
 
 impl Command for BranchFindCommand {
-    fn process(&self, index: usize, repo: GitRepo) -> WorkType {
+    fn process(&self, repo: GitRepo) -> WorkOption {
         if let Ok(()) = repo.has_local_branch(&self.branch) {
             let result = Box::new(BranchFindCommandResult {
                 branch: self.branch.clone(),
                 path: repo.path().into(),
             });
 
-            WorkType::result(index, result)
+            Some(result)
         } else {
-            WorkType::empty(index)
+            None
         }
     }
 }

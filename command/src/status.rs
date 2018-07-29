@@ -1,9 +1,9 @@
-use crate::{WorkResult, WorkType, Command};
+use crate::{WorkResult, Command};
 use color_printer::{Color, ColorPrinter, ColorSpec};
 use gitlib::{GitRepo, Status};
 use std::{io::Write, path::PathBuf};
 use command_derive::CommandBoxClone;
-use crate::command::CommandBoxClone;
+use crate::command::{CommandBoxClone, WorkOption};
 
 #[derive(Clone, CommandBoxClone, Default)]
 pub struct StatusCommand;
@@ -20,10 +20,10 @@ struct StatusCommandResult {
 }
 
 impl Command for StatusCommand {
-    fn process(&self, index: usize, repo: GitRepo) -> WorkType {
+    fn process(&self, repo: GitRepo) -> WorkOption {
         let statuses = match repo.statuses() {
-            Err(_) => return WorkType::empty(index),
-            Ok(ref s) if s.is_empty() => return WorkType::empty(index),
+            Err(_) => return None,
+            Ok(ref s) if s.is_empty() => return None,
             Ok(s) => s,
         };
 
@@ -40,7 +40,7 @@ impl Command for StatusCommand {
             statuses: result,
         });
 
-        WorkType::result(index, result)
+        Some(result)
     }
 }
 

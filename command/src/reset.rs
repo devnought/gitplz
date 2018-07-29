@@ -1,9 +1,9 @@
-use crate::{WorkResult, WorkType, Command};
+use crate::{WorkResult, Command};
 use color_printer::{Color, ColorPrinter, ColorSpec};
 use gitlib::{GitRepo, Status};
 use std::{fs, io::Write, path::PathBuf};
 use command_derive::CommandBoxClone;
-use crate::command::CommandBoxClone;
+use crate::command::{CommandBoxClone, WorkOption};
 
 #[derive(Clone, CommandBoxClone, Default)]
 pub struct ResetCommand;
@@ -20,7 +20,7 @@ struct ResetCommandResult {
 }
 
 impl Command for ResetCommand {
-    fn process(&self, index: usize, repo: GitRepo) -> WorkType {
+    fn process(&self, repo: GitRepo) -> WorkOption {
         // If we can get the status of the repo, try that first
         // instead of blindly resetting when it's not required.
         let status_result = repo.statuses();
@@ -29,7 +29,7 @@ impl Command for ResetCommand {
             Err(_) => None,
             Ok(s) => {
                 if s.is_empty() {
-                    return WorkType::empty(index);
+                    return None;
                 }
 
                 Some(s)
@@ -57,7 +57,7 @@ impl Command for ResetCommand {
 
         // Proceed with normal reset
         let head = match repo.reset() {
-            Err(_) => return WorkType::empty(index),
+            Err(_) => return None,
             Ok(h) => h,
         };
 
@@ -65,7 +65,8 @@ impl Command for ResetCommand {
             path: repo.path().into(),
             head: head.name().into(),
         };
-        WorkType::result(index, Box::new(result))
+
+        Some(Box::new(result))
     }
 }
 
