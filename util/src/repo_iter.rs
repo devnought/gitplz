@@ -24,7 +24,7 @@ impl Iterator for RepoIter {
     fn next(&mut self) -> Option<Self::Item> {
         loop {
             let iter_result = {
-                let mut iter = match self.state.get_iter() {
+                let iter = match self.state.get_iter() {
                     None => break None,
                     Some(iter) => iter,
                 };
