@@ -11,7 +11,7 @@ pub struct ColorPrinter<'a> {
     handle: StandardStreamLock<'a>,
 }
 
-impl ColorPrinter<'a> {
+impl<'a> ColorPrinter<'a> {
     pub fn new(is_terminal: bool, stream: &'a StandardStream) -> Self {
         Self {
             is_terminal,
@@ -34,7 +34,7 @@ impl ColorPrinter<'a> {
     }
 }
 
-impl Write for ColorPrinter<'a> {
+impl<'a> Write for ColorPrinter<'a> {
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
         self.handle.write(buf)
     }

@@ -38,7 +38,7 @@ crate enum BranchOption {
     Find,
 }
 
-fn build_cli() -> App<'a, 'b> {
+fn build_cli<'a, 'b>() -> App<'a, 'b> {
     App::new("Git, please")
         .bin_name(APP_NAME)
         .version(crate_version!())
@@ -54,21 +54,18 @@ fn build_cli() -> App<'a, 'b> {
                         .long("delete")
                         .value_name("BRANCH")
                         .group(CMD_BRANCH),
-                )
-                .arg(
+                ).arg(
                     Arg::with_name(FIND)
                         .short("f")
                         .long("find")
                         .value_name("BRANCH")
                         .group(CMD_BRANCH),
                 ),
-        )
-        .subcommand(
+        ).subcommand(
             SubCommand::with_name(CMD_CHECKOUT)
                 .about("Checkout branch across repos")
                 .arg(Arg::with_name(BRANCH).required(true).help("Branch name")),
-        )
-        .subcommand(
+        ).subcommand(
             SubCommand::with_name(CMD_COMPLETIONS)
                 .about("Generates completion scripts for your shell")
                 .arg(
@@ -77,8 +74,7 @@ fn build_cli() -> App<'a, 'b> {
                         .possible_values(&Shell::variants())
                         .help("The shell to generate the script for"),
                 ),
-        )
-        .subcommand(SubCommand::with_name(CMD_RESET).about("Recursive hard reset"))
+        ).subcommand(SubCommand::with_name(CMD_RESET).about("Recursive hard reset"))
         .subcommand(
             SubCommand::with_name(CMD_STATUS)
                 .about("Recursive directory search version of git status"),

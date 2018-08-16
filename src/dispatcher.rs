@@ -13,7 +13,7 @@ crate struct Dispatcher<'a> {
     printer: ColorPrinter<'a>,
 }
 
-impl Dispatcher<'a> {
+impl<'a> Dispatcher<'a> {
     crate fn new(
         pool: &'a ThreadPool,
         printer: ColorPrinter<'a>,

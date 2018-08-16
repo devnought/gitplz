@@ -9,13 +9,13 @@ pub struct Statuses<'a> {
     statuses: git2::Statuses<'a>,
 }
 
-impl From<git2::Statuses<'a>> for Statuses<'a> {
+impl<'a> From<git2::Statuses<'a>> for Statuses<'a> {
     fn from(statuses: git2::Statuses<'a>) -> Self {
         Self { statuses }
     }
 }
 
-impl Statuses<'a> {
+impl<'a> Statuses<'a> {
     pub fn iter(&self) -> StatusIter<'_> {
         let iter: StatusIter<'_> = self.statuses.iter().filter_map(|x| {
             let path = x.path()?.into();
