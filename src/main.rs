@@ -1,22 +1,20 @@
-#![feature(rust_2018_preview)]
 #![warn(rust_2018_idioms)]
 
+mod cli;
+mod dispatcher;
+
+use color_printer::ColorPrinter;
+use command::*;
+use crate::{
+    cli::{BranchOption, CommandArg, RunOption},
+    dispatcher::Dispatcher,
+};
 use std::{
     env,
     sync::mpsc::{channel, Receiver},
 };
-
-use color_printer::ColorPrinter;
 use threadpool::ThreadPool;
 use util::RepoIter;
-
-mod cli;
-use crate::cli::{BranchOption, CommandArg, RunOption};
-
-mod dispatcher;
-use crate::dispatcher::Dispatcher;
-
-use command::*;
 
 fn main() {
     let run_option = {

@@ -1,5 +1,5 @@
-use gitlib::GitRepo;
 use crate::worktype::WorkResult;
+use gitlib::GitRepo;
 
 pub trait CommandBoxClone {
     fn box_clone(&self) -> Box<dyn Command>;

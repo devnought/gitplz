@@ -1,9 +1,9 @@
-use crate::{WorkResult, Command};
 use color_printer::{Color, ColorPrinter, ColorSpec};
-use gitlib::{self, GitRepo};
-use std::{io::Write, path::PathBuf};
 use command_derive::CommandBoxClone;
 use crate::command::{CommandBoxClone, WorkOption};
+use crate::{Command, WorkResult};
+use gitlib::{self, GitRepo};
+use std::{io::Write, path::PathBuf};
 
 #[derive(Clone, CommandBoxClone)]
 pub struct BranchDeleteCommand {

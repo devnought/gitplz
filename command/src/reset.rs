@@ -1,9 +1,9 @@
-use crate::{WorkResult, Command};
 use color_printer::{Color, ColorPrinter, ColorSpec};
-use gitlib::{GitRepo, Status};
-use std::{fs, io::Write, path::PathBuf};
 use command_derive::CommandBoxClone;
 use crate::command::{CommandBoxClone, WorkOption};
+use crate::{Command, WorkResult};
+use gitlib::{GitRepo, Status};
+use std::{fs, io::Write, path::PathBuf};
 
 #[derive(Clone, CommandBoxClone, Default)]
 pub struct ResetCommand;
@@ -38,7 +38,8 @@ impl Command for ResetCommand {
 
         // Check for any 'new' files to delete
         if let Some(s) = statuses {
-            let iter = s.iter()
+            let iter = s
+                .iter()
                 .filter(|x| {
                     for status in x.iter() {
                         if let (_, Status::New) = status {
@@ -47,8 +48,7 @@ impl Command for ResetCommand {
                     }
 
                     false
-                })
-                .map(|x| repo.path().join(x.path()));
+                }).map(|x| repo.path().join(x.path()));
 
             for path in iter {
                 fs::remove_file(path).expect("Could not remove file");
