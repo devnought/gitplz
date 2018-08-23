@@ -3,7 +3,7 @@ cargo-features = ["edition"]
 [package]
 edition = "2018"
 name = "git-plz"
-version = "0.5.0"
+version = "0.6.0"
 authors = ["Kyle Gretchev <kgretchev@gmail.com>"]
 
 [workspace]

@@ -10,6 +10,7 @@ const CMD_STATUS: &str = "status";
 const BRANCH: &str = "branch";
 const DELETE: &str = "delete";
 const FIND: &str = "find";
+const PATH: &str = "path";
 const SHELL: &str = "shell";
 
 #[derive(Debug)]
@@ -52,19 +53,20 @@ fn build_cli<'a, 'b>() -> App<'a, 'b> {
                     Arg::with_name(DELETE)
                         .short("d")
                         .long("delete")
-                        .value_name("BRANCH")
+                        .value_name("branch")
                         .group(CMD_BRANCH),
                 ).arg(
                     Arg::with_name(FIND)
                         .short("f")
                         .long("find")
-                        .value_name("BRANCH")
+                        .value_name("branch")
                         .group(CMD_BRANCH),
-                ),
+                ).arg(path_arg()),
         ).subcommand(
             SubCommand::with_name(CMD_CHECKOUT)
                 .about("Checkout branch across repos")
-                .arg(Arg::with_name(BRANCH).required(true).help("Branch name")),
+                .arg(Arg::with_name(BRANCH).required(true).help("Branch name"))
+                .arg(path_arg()),
         ).subcommand(
             SubCommand::with_name(CMD_COMPLETIONS)
                 .about("Generates completion scripts for your shell")
@@ -74,11 +76,22 @@ fn build_cli<'a, 'b>() -> App<'a, 'b> {
                         .possible_values(&Shell::variants())
                         .help("The shell to generate the script for"),
                 ),
-        ).subcommand(SubCommand::with_name(CMD_RESET).about("Recursive hard reset"))
-        .subcommand(
+        ).subcommand(
+            SubCommand::with_name(CMD_RESET)
+                .about("Recursive hard reset")
+                .arg(path_arg()),
+        ).subcommand(
             SubCommand::with_name(CMD_STATUS)
-                .about("Recursive directory search version of git status"),
+                .about("Recursive directory search version of git status")
+                .arg(path_arg()),
         )
+}
+
+fn path_arg<'a, 'b>() -> Arg<'a, 'b> {
+    Arg::with_name(PATH)
+        .required(false)
+        .value_name(PATH)
+        .help("Path to execute command. Defaults to working directory.")
 }
 
 crate fn handle_args() -> CommandArg {
