@@ -1,5 +1,7 @@
-use clap::{crate_authors, crate_version, value_t, App, Arg, ArgGroup, Shell, SubCommand};
-use std::io;
+use clap::{
+    crate_authors, crate_version, value_t, App, Arg, ArgGroup, ArgMatches, Shell, SubCommand,
+};
+use std::{io, path::PathBuf};
 
 const APP_NAME: &str = "git plz";
 const CMD_BRANCH: &str = "branch";
@@ -15,9 +17,14 @@ const SHELL: &str = "shell";
 
 #[derive(Debug)]
 crate enum CommandArg {
-    Completions { shell: Shell },
+    Completions {
+        shell: Shell,
+    },
     Help,
-    Run { option: RunOption },
+    Run {
+        path: Option<PathBuf>,
+        option: RunOption,
+    },
 }
 
 #[derive(Debug)]
@@ -94,6 +101,16 @@ fn path_arg<'a, 'b>() -> Arg<'a, 'b> {
         .help("Path to execute command. Defaults to working directory.")
 }
 
+fn get_path(matches: Option<&ArgMatches<'_>>) -> Option<PathBuf> {
+    if let Some(m) = matches {
+        if m.is_present(PATH) {
+            return Some(value_t!(m, PATH, String).unwrap().into());
+        }
+    }
+
+    None
+}
+
 crate fn handle_args() -> CommandArg {
     let matches = build_cli().get_matches();
 
@@ -110,6 +127,7 @@ crate fn handle_args() -> CommandArg {
             };
 
             CommandArg::Run {
+                path: get_path(Some(branch_matches)),
                 option: RunOption::Branch {
                     branch: value_t!(branch_matches, CMD_BRANCH, String).unwrap(),
                     option,
@@ -117,6 +135,7 @@ crate fn handle_args() -> CommandArg {
             }
         }
         (CMD_CHECKOUT, Some(checkout_matches)) => CommandArg::Run {
+            path: get_path(Some(checkout_matches)),
             option: RunOption::Checkout {
                 branch: value_t!(checkout_matches, BRANCH, String).unwrap(),
             },
@@ -124,10 +143,12 @@ crate fn handle_args() -> CommandArg {
         (CMD_COMPLETIONS, Some(shell_matches)) => CommandArg::Completions {
             shell: value_t!(shell_matches, SHELL, Shell).unwrap(),
         },
-        (CMD_RESET, _) => CommandArg::Run {
+        (CMD_RESET, m) => CommandArg::Run {
+            path: get_path(m),
             option: RunOption::Reset,
         },
-        (CMD_STATUS, _) => CommandArg::Run {
+        (CMD_STATUS, m) => CommandArg::Run {
+            path: get_path(m),
             option: RunOption::Status,
         },
 

@@ -11,13 +11,14 @@ use crate::{
 };
 use std::{
     env,
+    path::PathBuf,
     sync::mpsc::{channel, Receiver},
 };
 use threadpool::ThreadPool;
 use util::RepoIter;
 
 fn main() {
-    let run_option = {
+    let (working_path, run_option) = {
         match cli::handle_args() {
             CommandArg::Help => {
                 cli::print_help();
@@ -27,7 +28,10 @@ fn main() {
                 cli::gen_completions_for(shell);
                 return;
             }
-            CommandArg::Run { option } => option,
+            CommandArg::Run { path, option } => (
+                path.unwrap_or(env::current_dir().expect("Could not get working directory")),
+                option,
+            ),
         }
     };
 
@@ -46,14 +50,13 @@ fn main() {
     };
 
     let pool = threadpool::Builder::new().build();
-    let rx = start_repo_iter(&pool);
+    let rx = start_repo_iter(working_path, &pool);
 
     let mut dispatcher = Dispatcher::new(&pool, printer, command);
     dispatcher.run(&rx);
 }
 
-fn start_repo_iter(pool: &ThreadPool) -> Receiver<WorkType> {
-    let working_dir = env::current_dir().expect("Could not get working directory");
+fn start_repo_iter(working_dir: PathBuf, pool: &ThreadPool) -> Receiver<WorkType> {
     let (tx, rx) = channel();
     let tx_send = tx.clone();
 
