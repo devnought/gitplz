@@ -2,16 +2,16 @@ use std::path::{Path, PathBuf};
 use structopt::{clap::ArgGroup, StructOpt};
 
 const APP_NAME: &str = "git plz";
-const CMD_BRANCH: &str = "branch";
+const CMD_BRANCH: &str = "BRANCH";
 
-fn branch_arg_group() -> ArgGroup<'static> {
+fn branch_arg_group<'a>() -> ArgGroup<'a> {
     ArgGroup::with_name("branch").required(true)
 }
 
 #[derive(StructOpt, Debug)]
 crate struct PathArg {
     /// Path to execute command. Defaults to working directory.
-    #[structopt(name = "path", parse(from_os_str))]
+    #[structopt(name = "PATH", parse(from_os_str))]
     value: Option<PathBuf>,
 }
 
@@ -48,7 +48,7 @@ crate enum RunOption {
     #[structopt(name = "checkout")]
     Checkout {
         /// Branch name
-        #[structopt(name = "branch")]
+        #[structopt(name = "BRANCH")]
         branch: String,
         #[structopt(flatten)]
         path: PathArg,
