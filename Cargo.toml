@@ -10,9 +10,9 @@ authors = ["Kyle Gretchev <kgretchev@gmail.com>"]
 
 [dependencies]
 atty = "0.2.11"
-clap = { version = "2.32.0", default-features = false, features = [ "suggestions" ] }
 color_printer = { path = "color_printer" }
 command = { path = "command" }
 gitlib = { path = "gitlib" }
+structopt = { version = "0.2.10", default-features = false, features = [ "suggestions" ] }
 threadpool = "1.7.1"
 util = { path = "util" }
