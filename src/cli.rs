@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use structopt::{clap::ArgGroup, StructOpt};
 
 const APP_NAME: &str = "git plz";
@@ -13,6 +13,12 @@ crate struct PathArg {
     /// Path to execute command. Defaults to working directory.
     #[structopt(name = "path", parse(from_os_str))]
     value: Option<PathBuf>,
+}
+
+impl PathArg {
+    fn as_path(&self) -> Option<&Path> {
+        self.value.as_ref().map(|x| x.as_path())
+    }
 }
 
 #[derive(StructOpt, Debug)]
@@ -54,7 +60,7 @@ crate enum RunOption {
         path: PathArg,
     },
     /// Recursive directory search version of git status
-    #[structopt(name = "status",)]
+    #[structopt(name = "status")]
     Status {
         #[structopt(flatten)]
         path: PathArg,
@@ -62,12 +68,12 @@ crate enum RunOption {
 }
 
 impl RunOption {
-    crate fn path(&self) -> Option<&std::path::Path> {
+    crate fn path(&self) -> Option<&Path> {
         match self {
-            RunOption::Branch { path, .. } => path.value.as_ref().map(|x| x.as_path()),
-            RunOption::Checkout { path, .. } => path.value.as_ref().map(|x| x.as_path()),
-            RunOption::Reset { path, .. } => path.value.as_ref().map(|x| x.as_path()),
-            RunOption::Status { path, .. } => path.value.as_ref().map(|x| x.as_path()),
+            RunOption::Branch { path, .. } => path.as_path(),
+            RunOption::Checkout { path, .. } => path.as_path(),
+            RunOption::Reset { path, .. } => path.as_path(),
+            RunOption::Status { path, .. } => path.as_path(),
         }
     }
 }

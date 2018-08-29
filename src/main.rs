@@ -22,7 +22,7 @@ fn main() {
     let working_path = run_option
         .path()
         .map(|x| x.into())
-        .unwrap_or(env::current_dir().expect("Could not get working directory"));
+        .unwrap_or_else(|| env::current_dir().expect("Could not get working directory"));
 
     let is_terminal = atty::is(atty::Stream::Stdout);
     let stream = color_printer::StandardStream::stdout(color_printer::ColorChoice::Auto);
