@@ -1,8 +1,5 @@
 #![warn(rust_2018_idioms)]
 
-#[macro_use]
-extern crate structopt;
-
 mod cli;
 mod dispatcher;
 
