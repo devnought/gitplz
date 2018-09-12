@@ -68,7 +68,7 @@ pub enum RunOption {
 }
 
 impl RunOption {
-    pub(crate) fn path(&self) -> Option<&Path> {
+    pub fn path(&self) -> Option<&Path> {
         match self {
             RunOption::Branch { path, .. } => path.as_path(),
             RunOption::Checkout { path, .. } => path.as_path(),
@@ -78,6 +78,6 @@ impl RunOption {
     }
 }
 
-pub(crate) fn handle_args() -> RunOption {
+pub fn handle_args() -> RunOption {
     RunOption::from_args()
 }

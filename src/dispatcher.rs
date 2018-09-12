@@ -14,11 +14,7 @@ pub struct Dispatcher<'a> {
 }
 
 impl<'a> Dispatcher<'a> {
-    pub fn new(
-        pool: &'a ThreadPool,
-        printer: ColorPrinter<'a>,
-        command: Box<dyn Command>,
-    ) -> Self {
+    pub fn new(pool: &'a ThreadPool, printer: ColorPrinter<'a>, command: Box<dyn Command>) -> Self {
         Self {
             queue: BTreeMap::new(),
             next_index: 0,
