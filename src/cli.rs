@@ -9,7 +9,7 @@ fn branch_arg_group<'a>() -> ArgGroup<'a> {
 }
 
 #[derive(StructOpt, Debug)]
-crate struct PathArg {
+pub struct PathArg {
     /// Path to execute command. Defaults to working directory.
     #[structopt(name = "PATH", parse(from_os_str))]
     value: Option<PathBuf>,
@@ -23,7 +23,7 @@ impl PathArg {
 
 #[derive(StructOpt, Debug)]
 #[structopt(raw(bin_name = "APP_NAME"))]
-crate enum RunOption {
+pub enum RunOption {
     /// Perform bulk local branch operations
     #[structopt(name = "branch", raw(group = "branch_arg_group()"))]
     Branch {
@@ -68,7 +68,7 @@ crate enum RunOption {
 }
 
 impl RunOption {
-    crate fn path(&self) -> Option<&Path> {
+    pub(crate) fn path(&self) -> Option<&Path> {
         match self {
             RunOption::Branch { path, .. } => path.as_path(),
             RunOption::Checkout { path, .. } => path.as_path(),
@@ -78,6 +78,6 @@ impl RunOption {
     }
 }
 
-crate fn handle_args() -> RunOption {
+pub(crate) fn handle_args() -> RunOption {
     RunOption::from_args()
 }

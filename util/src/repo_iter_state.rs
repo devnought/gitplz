@@ -5,15 +5,15 @@ use std::{
     path::PathBuf,
 };
 
-crate type InternalRepoIter = Filter<ReadDir, fn(&io::Result<DirEntry>) -> bool>;
+type InternalRepoIter = Filter<ReadDir, fn(&io::Result<DirEntry>) -> bool>;
 
-crate struct RepoIterState {
+pub struct RepoIterState {
     pending: Vec<PathBuf>,
     filtered: Option<InternalRepoIter>,
 }
 
 impl RepoIterState {
-    crate fn new<P>(path: P) -> Self
+    pub fn new<P>(path: P) -> Self
     where
         P: Into<PathBuf>,
     {
@@ -23,7 +23,7 @@ impl RepoIterState {
         }
     }
 
-    crate fn get_iter(&mut self) -> Option<&mut InternalRepoIter> {
+    pub fn get_iter(&mut self) -> Option<&mut InternalRepoIter> {
         if self.filtered.is_some() {
             return self.filtered.as_mut();
         }
@@ -44,11 +44,11 @@ impl RepoIterState {
         self.filtered.as_mut()
     }
 
-    crate fn end_iter(&mut self) {
+    pub fn end_iter(&mut self) {
         self.filtered = None;
     }
 
-    crate fn add_pending(&mut self, entry: PathBuf) {
+    pub fn add_pending(&mut self, entry: PathBuf) {
         self.pending.push(entry);
     }
 }
