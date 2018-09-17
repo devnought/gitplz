@@ -5,4 +5,4 @@ version = "0.1.0"
 authors = ["Kyle Gretchev <kgretchev@gmail.com>"]
 
 [dependencies]
-termcolor = "1.0.3"
+termcolor = "1.0.4"
