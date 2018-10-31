@@ -104,31 +104,20 @@ impl GitRepo {
         let branch_ref = self.repo.find_reference(&branch_str)?;
 
         self.repo
-            .set_head(branch_ref.name().expect("Error setting head"))
-            .expect("Error setting head");
+            .set_head(branch_ref.name().ok_or(Error::GenericError)?)?;
 
         Ok(true)
     }
 
     fn checkout_remote(&self, obj: &git2::Object<'_>) -> Result<bool, Error> {
-        let head_id = self
-            .repo
-            .head()
-            .expect("Could not resolve head")
-            .peel(git2::ObjectType::Any)
-            .expect("Could not get head ref")
-            .id();
+        let head_id = self.repo.head()?.peel(git2::ObjectType::Any)?.id();
 
         if head_id == obj.id() {
             return Ok(false);
         }
 
-        self.repo
-            .set_head_detached(obj.id())
-            .expect("Error setting head detatched");
-        self.repo
-            .reset(obj, git2::ResetType::Hard, None)
-            .expect("Reset error");
+        self.repo.set_head_detached(obj.id())?;
+        self.repo.reset(obj, git2::ResetType::Hard, None)?;
 
         Ok(true)
     }
