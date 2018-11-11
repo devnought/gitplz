@@ -1,5 +1,3 @@
-//#![warn(rust_2018_idioms)]
-
 extern crate proc_macro;
 use crate::proc_macro::TokenStream;
 

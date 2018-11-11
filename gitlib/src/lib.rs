@@ -1,5 +1,3 @@
-#![warn(rust_2018_idioms)]
-
 #[derive(Debug)]
 pub enum Error {
     GenericError,

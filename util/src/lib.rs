@@ -1,5 +1,3 @@
-#![warn(rust_2018_idioms)]
-
 mod repo_iter;
 mod repo_iter_state;
 pub use crate::repo_iter::RepoIter;
