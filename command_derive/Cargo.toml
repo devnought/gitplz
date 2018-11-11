@@ -8,5 +8,5 @@ authors = ["Kyle Gretchev <kgretchev@gmail.com>"]
 proc-macro = true
 
 [dependencies]
-quote = "0.6.9"
-syn = { version = "0.15.18", default-features = false, features = [ "derive", "full", "parsing", "printing", "visit", "visit-mut", "fold", "clone-impls", "extra-traits", "proc-macro" ] }
+quote = "0.6.10"
+syn = { version = "0.15.19", default-features = false, features = [ "derive", "full", "parsing", "printing", "visit", "visit-mut", "fold", "clone-impls", "extra-traits", "proc-macro" ] }
