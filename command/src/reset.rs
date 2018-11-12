@@ -47,7 +47,8 @@ impl Command for ResetCommand {
                     }
 
                     false
-                }).map(|x| repo.path().join(x.path()));
+                })
+                .map(|x| repo.path().join(x.path()));
 
             for path in iter {
                 fs::remove_file(path).expect("Could not remove file");
