@@ -53,6 +53,12 @@ pub enum RunOption {
         #[structopt(flatten)]
         path: PathArg,
     },
+    /// Recursive fetch
+    #[structopt(name = "fetch")]
+    Fetch {
+        #[structopt(flatten)]
+        path: PathArg,
+    },
     /// Recursive hard reset
     #[structopt(name = "reset")]
     Reset {
@@ -72,6 +78,7 @@ impl RunOption {
         match self {
             RunOption::Branch { path, .. } => path.as_path(),
             RunOption::Checkout { path, .. } => path.as_path(),
+            RunOption::Fetch { path, .. } => path.as_path(),
             RunOption::Reset { path, .. } => path.as_path(),
             RunOption::Status { path, .. } => path.as_path(),
         }

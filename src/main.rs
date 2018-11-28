@@ -35,6 +35,7 @@ fn main() {
             }
         }
         RunOption::Checkout { branch, .. } => Box::new(CheckoutCommand::new(branch)),
+        RunOption::Fetch { .. } => Box::new(FetchCommand::new()),
         RunOption::Reset { .. } => Box::new(ResetCommand::new()),
         RunOption::Status { .. } => Box::new(StatusCommand::new()),
     };
