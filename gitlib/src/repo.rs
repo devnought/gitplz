@@ -74,6 +74,14 @@ impl GitRepo {
         Ok(())
     }
 
+    pub fn fetch(&self) -> Result<(), Error> {
+        self.repo
+            .find_remote("origin")?
+            .fetch(&["master"], None, None)?;
+
+        Ok(())
+    }
+
     pub fn has_local_branch(&self, branch_name: &str) -> Result<(), Error> {
         self.repo
             .find_branch(branch_name, git2::BranchType::Local)?;
