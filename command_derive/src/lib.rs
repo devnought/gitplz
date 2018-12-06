@@ -1,3 +1,5 @@
+// TODO: Can this be better now that Rust 2018 is stable?
+
 extern crate proc_macro;
 use crate::proc_macro::TokenStream;
 
