@@ -1,9 +1,9 @@
 mod cli;
 mod dispatcher;
 
+use crate::{cli::RunOption, dispatcher::Dispatcher};
 use color_printer::ColorPrinter;
 use command::*;
-use crate::{cli::RunOption, dispatcher::Dispatcher};
 use std::{
     env,
     path::PathBuf,
