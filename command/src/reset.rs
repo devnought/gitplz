@@ -1,6 +1,6 @@
+use crate::{Command, CommandBoxClone, WorkOption, WorkResult};
 use color_printer::{Color, ColorPrinter, ColorSpec};
 use command_derive::CommandBoxClone;
-use crate::{Command, CommandBoxClone, WorkOption, WorkResult};
 use gitlib::{GitRepo, Status};
 use std::{fs, io::Write, path::PathBuf};
 

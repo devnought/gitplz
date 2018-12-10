@@ -1,7 +1,7 @@
 use crate::{Command, CommandBoxClone, WorkOption, WorkResult};
 use color_printer::{Color, ColorPrinter, ColorSpec};
 use command_derive::CommandBoxClone;
-use gitlib::{GitRepo};
+use gitlib::GitRepo;
 use std::{io::Write, path::PathBuf};
 
 #[derive(Clone, CommandBoxClone, Default)]
@@ -17,14 +17,10 @@ struct FetchCommandResult {}
 
 impl Command for FetchCommand {
     fn process(&self, repo: GitRepo) -> WorkOption {
-        
-
         Some(Box::new(FetchCommandResult {}))
     }
 }
 
 impl WorkResult for FetchCommandResult {
-    fn print(&self, printer: &mut ColorPrinter<'_>) {
-
-    }
+    fn print(&self, printer: &mut ColorPrinter<'_>) {}
 }
