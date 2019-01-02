@@ -13,14 +13,27 @@ impl FetchCommand {
     }
 }
 
-struct FetchCommandResult {}
+struct FetchCommandResult {
+    msg: String,
+}
 
 impl Command for FetchCommand {
     fn process(&self, repo: GitRepo) -> WorkOption {
-        Some(Box::new(FetchCommandResult {}))
+        let res = match repo.fetch() {
+            Ok(_) => Box::new(FetchCommandResult {
+                msg: "My man!".into(),
+            }),
+            Err(_) => Box::new(FetchCommandResult {
+                msg: "Not like this".into(),
+            }),
+        };
+
+        Some(res)
     }
 }
 
 impl WorkResult for FetchCommandResult {
-    fn print(&self, printer: &mut ColorPrinter<'_>) {}
+    fn print(&self, printer: &mut ColorPrinter<'_>) {
+        writeln!(printer, "{}", self.msg).expect("write fail");
+    }
 }
