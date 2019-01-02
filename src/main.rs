@@ -1,11 +1,10 @@
 mod cli;
 mod dispatcher;
 
-use crate::{cli::RunOption, dispatcher::Dispatcher};
+use crate::dispatcher::Dispatcher;
 use color_printer::ColorPrinter;
-use command::*;
+use command::WorkType;
 use std::{
-    env,
     path::PathBuf,
     sync::mpsc::{channel, Receiver},
 };
@@ -13,32 +12,11 @@ use threadpool::ThreadPool;
 use util::RepoIter;
 
 fn main() {
-    let run_option = cli::handle_args();
-    let working_path = run_option
-        .path()
-        .map(|x| x.into())
-        .unwrap_or_else(|| env::current_dir().expect("Could not get working directory"));
+    let (command, working_path) = cli::handle_args().destructure();
 
     let is_terminal = atty::is(atty::Stream::Stdout);
     let stream = color_printer::StandardStream::stdout(color_printer::ColorChoice::Auto);
     let printer = ColorPrinter::new(is_terminal, &stream);
-
-    let command: Box<dyn Command> = match run_option {
-        RunOption::Branch { delete, find, .. } => {
-            // TODO: This needs to be an enum again
-            if let Some(branch) = delete {
-                Box::new(BranchDeleteCommand::new(branch))
-            } else if let Some(branch) = find {
-                Box::new(BranchFindCommand::new(branch))
-            } else {
-                panic!("Invalid branch option");
-            }
-        }
-        RunOption::Checkout { branch, .. } => Box::new(CheckoutCommand::new(branch)),
-        RunOption::Fetch { .. } => Box::new(FetchCommand::new()),
-        RunOption::Reset { .. } => Box::new(ResetCommand::new()),
-        RunOption::Status { .. } => Box::new(StatusCommand::new()),
-    };
 
     let pool = threadpool::Builder::new().build();
     let rx = start_repo_iter(working_path, &pool);

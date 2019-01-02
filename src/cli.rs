@@ -1,4 +1,5 @@
-use std::path::{Path, PathBuf};
+use command::*;
+use std::{env, path::PathBuf};
 use structopt::{clap::ArgGroup, StructOpt};
 
 const APP_NAME: &str = "git plz";
@@ -9,21 +10,15 @@ fn branch_arg_group<'a>() -> ArgGroup<'a> {
 }
 
 #[derive(StructOpt, Debug)]
-pub struct PathArg {
+struct PathArg {
     /// Path to execute command. Defaults to working directory.
     #[structopt(name = "PATH", parse(from_os_str))]
     value: Option<PathBuf>,
 }
 
-impl PathArg {
-    fn as_path(&self) -> Option<&Path> {
-        self.value.as_ref().map(|x| x.as_path())
-    }
-}
-
 #[derive(StructOpt, Debug)]
 #[structopt(raw(bin_name = "APP_NAME"))]
-pub enum RunOption {
+enum RunOption {
     /// Perform bulk local branch operations
     #[structopt(name = "branch", raw(group = "branch_arg_group()"))]
     Branch {
@@ -73,18 +68,48 @@ pub enum RunOption {
     },
 }
 
-impl RunOption {
-    pub fn path(&self) -> Option<&Path> {
-        match self {
-            RunOption::Branch { path, .. } => path.as_path(),
-            RunOption::Checkout { path, .. } => path.as_path(),
-            RunOption::Fetch { path, .. } => path.as_path(),
-            RunOption::Reset { path, .. } => path.as_path(),
-            RunOption::Status { path, .. } => path.as_path(),
+pub struct MappedArgs {
+    command: Box<dyn Command>,
+    path: PathBuf,
+}
+
+impl MappedArgs {
+    fn new(run_option: RunOption) -> Self {
+        struct TempArgs(Box<dyn Command>, PathArg);
+
+        let temp_args = match run_option {
+            RunOption::Branch { path, delete, find } => {
+                // TODO: This needs to be an enum again
+                if let Some(branch) = delete {
+                    TempArgs(Box::new(BranchDeleteCommand::new(branch)), path)
+                } else if let Some(branch) = find {
+                    TempArgs(Box::new(BranchFindCommand::new(branch)), path)
+                } else {
+                    panic!("Invalid branch option");
+                }
+            }
+            RunOption::Checkout { path, branch } => {
+                TempArgs(Box::new(CheckoutCommand::new(branch)), path)
+            }
+            RunOption::Fetch { path } => TempArgs(Box::new(FetchCommand::new()), path),
+            RunOption::Reset { path } => TempArgs(Box::new(ResetCommand::new()), path),
+            RunOption::Status { path } => TempArgs(Box::new(StatusCommand::new()), path),
+        };
+
+        Self {
+            command: temp_args.0,
+            path: temp_args
+                .1
+                .value
+                .unwrap_or_else(|| env::current_dir().expect("Could not get working directory")),
         }
+    }
+
+    pub fn destructure(self) -> (Box<dyn Command>, PathBuf) {
+        (self.command, self.path)
     }
 }
 
-pub fn handle_args() -> RunOption {
-    RunOption::from_args()
+pub fn handle_args() -> MappedArgs {
+    MappedArgs::new(RunOption::from_args())
 }
