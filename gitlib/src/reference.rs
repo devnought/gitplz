@@ -6,7 +6,7 @@ pub struct Reference {
 }
 
 impl Reference {
-    pub fn new(reference: &git2::Reference<'_>) -> Result<Self, Error> {
+    pub fn from_ref(reference: &git2::Reference<'_>) -> Result<Self, Error> {
         Ok(Self {
             name: reference
                 .name()

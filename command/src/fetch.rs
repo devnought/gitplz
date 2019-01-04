@@ -1,8 +1,8 @@
 use crate::{Command, CommandBoxClone, WorkOption, WorkResult};
-use color_printer::{Color, ColorPrinter, ColorSpec};
+use color_printer::ColorPrinter;
 use command_derive::CommandBoxClone;
 use gitlib::GitRepo;
-use std::{io::Write, path::PathBuf};
+use std::io::Write;
 
 #[derive(Clone, CommandBoxClone, Default)]
 pub struct FetchCommand;
@@ -23,8 +23,8 @@ impl Command for FetchCommand {
             Ok(_) => Box::new(FetchCommandResult {
                 msg: "My man!".into(),
             }),
-            Err(_) => Box::new(FetchCommandResult {
-                msg: "Not like this".into(),
+            Err(e) => Box::new(FetchCommandResult {
+                msg: format!("{:?}", e),
             }),
         };
 

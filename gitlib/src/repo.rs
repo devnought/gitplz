@@ -52,7 +52,7 @@ impl GitRepo {
 
         self.repo.reset(&obj, git2::ResetType::Hard, None)?;
 
-        Reference::new(&head)
+        Reference::from_ref(&head)
     }
 
     pub fn checkout(&self, branch_name: &str) -> Result<bool, Error> {
