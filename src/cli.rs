@@ -16,6 +16,13 @@ struct PathArg {
     value: Option<PathBuf>,
 }
 
+impl Into<PathBuf> for PathArg {
+    fn into(self) -> PathBuf {
+        self.value
+            .unwrap_or_else(|| env::current_dir().expect("Could not get working directory"))
+    }
+}
+
 #[derive(StructOpt, Debug)]
 #[structopt(raw(bin_name = "APP_NAME"))]
 enum RunOption {
@@ -75,33 +82,30 @@ pub struct MappedArgs {
 
 impl MappedArgs {
     fn new(run_option: RunOption) -> Self {
-        struct TempArgs(Box<dyn Command>, PathArg);
+        struct ArgPair(Box<dyn Command>, PathArg);
 
-        let temp_args = match run_option {
+        let ArgPair(command, path) = match run_option {
             RunOption::Branch { path, delete, find } => {
                 // TODO: This needs to be an enum again
                 if let Some(branch) = delete {
-                    TempArgs(Box::new(BranchDeleteCommand::new(branch)), path)
+                    ArgPair(Box::new(BranchDeleteCommand::new(branch)), path)
                 } else if let Some(branch) = find {
-                    TempArgs(Box::new(BranchFindCommand::new(branch)), path)
+                    ArgPair(Box::new(BranchFindCommand::new(branch)), path)
                 } else {
                     panic!("Invalid branch option");
                 }
             }
             RunOption::Checkout { path, branch } => {
-                TempArgs(Box::new(CheckoutCommand::new(branch)), path)
+                ArgPair(Box::new(CheckoutCommand::new(branch)), path)
             }
-            RunOption::Fetch { path } => TempArgs(Box::new(FetchCommand::new()), path),
-            RunOption::Reset { path } => TempArgs(Box::new(ResetCommand::new()), path),
-            RunOption::Status { path } => TempArgs(Box::new(StatusCommand::new()), path),
+            RunOption::Fetch { path } => ArgPair(Box::new(FetchCommand::new()), path),
+            RunOption::Reset { path } => ArgPair(Box::new(ResetCommand::new()), path),
+            RunOption::Status { path } => ArgPair(Box::new(StatusCommand::new()), path),
         };
 
         Self {
-            command: temp_args.0,
-            path: temp_args
-                .1
-                .value
-                .unwrap_or_else(|| env::current_dir().expect("Could not get working directory")),
+            command,
+            path: path.into(),
         }
     }
 
