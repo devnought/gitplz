@@ -75,9 +75,12 @@ impl GitRepo {
     }
 
     pub fn fetch(&self) -> Result<(), Error> {
-        self.repo
-            .find_remote("origin")?
-            .fetch(&["master"], None, None)?;
+        let strs = self.repo.find_remote("origin")?.fetch_refspecs()?;
+        let test = strs.iter().filter_map(|x| x).collect::<Vec<_>>();
+
+        if let Err(e) = self.repo.find_remote("origin")?.fetch(&test, None, None) {
+            let asd = format!("{:?}", e);
+        }
 
         Ok(())
     }
