@@ -75,11 +75,30 @@ impl GitRepo {
     }
 
     pub fn fetch(&self) -> Result<(), Error> {
-        let strs = self.repo.find_remote("origin")?.fetch_refspecs()?;
-        let test = strs.iter().filter_map(|x| x).collect::<Vec<_>>();
+        let mut options = {
+            let mut remote_callbacks = git2::RemoteCallbacks::new();
+            remote_callbacks.credentials(
+                |_s: &str,
+                 _os: Option<&str>,
+                 _ct: git2::CredentialType|
+                 -> Result<git2::Cred, git2::Error> { git2::Cred::default() },
+            );
 
-        if let Err(e) = self.repo.find_remote("origin")?.fetch(&test, None, None) {
+            let mut o = git2::FetchOptions::new();
+            o.remote_callbacks(remote_callbacks);
+            o
+        };
+
+        let refspecs = self.repo.find_remote("origin")?.fetch_refspecs()?;
+        let refspec_collection = refspecs.iter().filter_map(|x| x).collect::<Vec<_>>();
+
+        if let Err(e) =
+            self.repo
+                .find_remote("origin")?
+                .fetch(&refspec_collection, Some(&mut options), None)
+        {
             let asd = format!("{:?}", e);
+            return Err(Error::GenericError);
         }
 
         Ok(())
