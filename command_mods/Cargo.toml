@@ -1,0 +1,18 @@
+[package]
+name = "command_mods"
+version = "0.1.0"
+authors = ["Kyle Gretchev <kyle.gretchev@magnetforensics.com>"]
+edition = "2018"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+quote = "0.6.11"
+
+[dependencies.syn]
+version = "0.15.27"
+default-features = false
+features = [
+    "proc-macro"
+]

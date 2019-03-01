@@ -1,12 +1,4 @@
-macro_rules! mods {
-    ( $( $x:ident ),* ) => {
-        $(
-            mod $x;
-        )*
-    };
-}
-
-include!(concat!(env!("OUT_DIR"), "/generated-commands.rs"));
+command_mods::make_mods!();
 
 #[cfg(test)]
 mod tests {
