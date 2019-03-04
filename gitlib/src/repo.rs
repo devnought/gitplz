@@ -1,6 +1,7 @@
 use crate::{credentials::Credentials, Error, Reference, Statuses};
 use git2;
 use std::path::{Path, PathBuf};
+use url::Url;
 
 pub struct GitRepo {
     path: PathBuf,
@@ -154,19 +155,42 @@ impl GitRepo {
 
     fn credentials_callback(
         user: &str,
-        _user_from_url: Option<&str>,
+        user_from_url: Option<&str>,
         cred: git2::CredentialType,
     ) -> Result<git2::Cred, git2::Error> {
         let credentials = Credentials::from(cred).collect::<Vec<_>>();
 
+        dbg!(&credentials);
+
+        let usr = String::from(user);
+        let usr_url = format!("{:?}", user_from_url);
+
+        // So far, this is usually meaning one of many SSH types. Need to handle better.
         if credentials.len() > 1 {
-            //panic!("Was not reaallly expecting to have multiple credential types. Guess it needs to be handled afterall.");
-            dbg!(&credentials);
+            let private_key = Path::new("~/.ssh/id_rsa");
+            let public_key = Path::new("~/.ssh/id_rsa.pub");
+
+            return git2::Cred::ssh_key(
+                user_from_url.expect("Could not unwrap `user_from_url`"),
+                Some(public_key),
+                private_key,
+                None,
+            );
         }
 
-        //Err(git2::Error::from_str("asd"))
+        let url = Url::parse(user).expect("Could not parse url from `user`");
 
-        // From my test case, it's mostly Username, so lets hardcode that for now
-        git2::Cred::username(user)
+        if url.scheme() != "ssh" {
+            return Err(git2::Error::from_str("nooope"));
+        }
+
+        // At this point, user will be the hostname.
+        // Use it to get a username from the correct host out of
+        // ~/.ssh/config
+
+        let username = ssh_config::username_for_host(url.host_str().expect("URL has no host str"))
+            .expect("Unable to get username from ssh config");
+
+        git2::Cred::username(username.as_str())
     }
 }
