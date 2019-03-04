@@ -70,6 +70,8 @@ pub use crate::statuses::{StatusIter, Statuses};
 mod status_entry_iter;
 pub use crate::status_entry_iter::{Status, StatusEntryIter};
 
+mod credentials;
+
 #[cfg(test)]
 mod tests {
     #[test]

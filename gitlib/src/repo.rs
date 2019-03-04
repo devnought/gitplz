@@ -1,4 +1,4 @@
-use crate::{Error, Reference, Statuses};
+use crate::{credentials::Credentials, Error, Reference, Statuses};
 use git2;
 use std::path::{Path, PathBuf};
 
@@ -91,12 +91,13 @@ impl GitRepo {
         // &["refs/heads/*:refs/heads/*"]
         // Example here: https://github.com/rust-lang/crates.io/blob/master/src/git.rs#L114-L209
 
-        if let Err(e) =
-            self.repo
-                .find_remote("origin")?
-                .fetch(&refspec_collection, Some(&mut fetch_options), None)
-        {
+        if let Err(e) = self.repo.find_remote("origin")?.fetch(
+            &refspec_collection,
+            Some(&mut fetch_options),
+            None,
+        ) {
             let asd = format!("{:?}", e);
+            dbg!(&self.path);
             return Err(Error::GenericError);
         }
 
@@ -152,10 +153,20 @@ impl GitRepo {
     }
 
     fn credentials_callback(
-        _user: &str,
+        user: &str,
         _user_from_url: Option<&str>,
-        _cred: git2::CredentialType,
+        cred: git2::CredentialType,
     ) -> Result<git2::Cred, git2::Error> {
-        git2::Cred::ssh_key_from_agent("kgretchev")
+        let credentials = Credentials::from(cred).collect::<Vec<_>>();
+
+        if credentials.len() > 1 {
+            //panic!("Was not reaallly expecting to have multiple credential types. Guess it needs to be handled afterall.");
+            dbg!(&credentials);
+        }
+
+        //Err(git2::Error::from_str("asd"))
+
+        // From my test case, it's mostly Username, so lets hardcode that for now
+        git2::Cred::username(user)
     }
 }
