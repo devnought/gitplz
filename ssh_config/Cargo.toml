@@ -5,4 +5,4 @@ authors = ["Kyle Gretchev <kyle.gretchev@magnetforensics.com>"]
 edition = "2018"
 
 [dependencies]
-regex = "1.1.2"
+combine = "3.6.7"
