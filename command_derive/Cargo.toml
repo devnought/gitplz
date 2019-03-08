@@ -11,17 +11,8 @@ proc-macro = true
 quote = "0.6.11"
 
 [dependencies.syn]
-version = "0.15.27"
+version = "0.15.28"
 default-features = false
 features = [
-    "derive",
-    "full",
-    "parsing",
-    "printing",
-    "visit",
-    "visit-mut",
-    "fold",
-    "clone-impls",
-    "extra-traits",
     "proc-macro"
 ]
