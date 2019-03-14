@@ -53,7 +53,7 @@ dependencies = [
 
 [[package]]
 name = "combine"
-version = "3.8.0"
+version = "3.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "ascii 0.9.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -317,7 +317,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 name = "ssh_config"
 version = "0.1.0"
 dependencies = [
- "combine 3.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "combine 3.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -499,7 +499,7 @@ dependencies = [
 "checksum cc 1.0.31 (registry+https://github.com/rust-lang/crates.io-index)" = "c9ce8bb087aacff865633f0bd5aeaed910fe2fe55b55f4739527f2e023a2e53d"
 "checksum cfg-if 0.1.7 (registry+https://github.com/rust-lang/crates.io-index)" = "11d43355396e872eefb45ce6342e4374ed7bc2b3a502d1b28e36d6e23c05d1f4"
 "checksum clap 2.32.0 (registry+https://github.com/rust-lang/crates.io-index)" = "b957d88f4b6a63b9d70d5f454ac8011819c6efa7727858f458ab71c756ce2d3e"
-"checksum combine 3.8.0 (registry+https://github.com/rust-lang/crates.io-index)" = "44f7b44c5e368fe1f135c8767167d0d926d4de78a4826ff1de809afc592add6c"
+"checksum combine 3.8.1 (registry+https://github.com/rust-lang/crates.io-index)" = "da3da6baa321ec19e1cc41d31bf599f00c783d0517095cdaf0332e3fe8d20680"
 "checksum curl-sys 0.4.17 (registry+https://github.com/rust-lang/crates.io-index)" = "7b8d8e51964f58c8053337fcef48e1c4608c7ee70c6f2e457674a97dda5a5828"
 "checksum either 1.5.1 (registry+https://github.com/rust-lang/crates.io-index)" = "c67353c641dc847124ea1902d69bd753dee9bb3beff9aa3662ecf86c971d1fac"
 "checksum git2 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)" = "c7339329bfa14a00223244311560d11f8f489b453fb90092af97f267a6090ab0"
