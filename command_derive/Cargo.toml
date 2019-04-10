@@ -8,7 +8,7 @@ authors = ["Kyle Gretchev <kgretchev@gmail.com>"]
 proc-macro = true
 
 [dependencies]
-quote = "0.6.11"
+quote = "0.6.12"
 
 [dependencies.syn]
 version = "0.15.30"
