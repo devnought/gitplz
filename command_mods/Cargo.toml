@@ -11,7 +11,7 @@ proc-macro = true
 quote = "0.6.12"
 
 [dependencies.syn]
-version = "0.15.32"
+version = "0.15.33"
 default-features = false
 features = [
     "proc-macro"

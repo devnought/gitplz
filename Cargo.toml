@@ -7,11 +7,11 @@ authors = ["Kyle Gretchev <kgretchev@gmail.com>"]
 [workspace]
 
 [dependencies]
-atty = "0.2.11"
+atty = "0.2"
 color_printer = { path = "color_printer" }
 command = { path = "command" }
 gitlib = { path = "gitlib" }
-structopt = { version = "0.2.15", default-features = false, features = [ "suggestions" ] }
+structopt = { version = "0.2", default-features = false, features = [ "suggestions" ] }
 threadpool = "1.7.1"
 util = { path = "util" }
 
