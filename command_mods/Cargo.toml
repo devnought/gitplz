@@ -8,10 +8,10 @@ edition = "2018"
 proc-macro = true
 
 [dependencies]
-quote = "0.6.12"
+quote = "0.6"
 
 [dependencies.syn]
-version = "0.15.33"
+version = "0.15"
 default-features = false
 features = [
     "proc-macro"
