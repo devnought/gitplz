@@ -188,9 +188,18 @@ impl GitRepo {
         // Use it to get a username from the correct host out of
         // ~/.ssh/config
 
-        let username = ssh_config::username_for_host(url.host_str().expect("URL has no host str"))
+        /*fn username_for_host<'a>(host_name: &str) -> &'a str {
+            let hosts = ssh_config::parse("~/.ssh/config").expect("Could not parse ssh config");
+
+            hosts
+                .filter(|x| x.name == host_name)
+                .map(|x| x.properties.filter(|x| x.key == "User"))
+        }
+
+        let username = username_for_host(url.host_str().expect("URL has no host str"))
             .expect("Unable to get username from ssh config");
 
-        git2::Cred::username(username.as_str())
+        git2::Cred::username(username.as_str())*/
+        git2::Cred::username("DrBucket")
     }
 }
