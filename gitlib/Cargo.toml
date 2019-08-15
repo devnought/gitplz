@@ -7,4 +7,4 @@ authors = ["Kyle Gretcehv <kgretchev@gmail.com>"]
 [dependencies]
 git2 = "0.9"
 ssh-config = { git = "https://github.com/devnought/ssh-config" }
-url = "1"
+url = "2"
