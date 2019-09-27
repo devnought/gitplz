@@ -2,44 +2,38 @@ use command::*;
 use std::{env, path::PathBuf};
 use structopt::{clap::ArgGroup, StructOpt};
 
-const APP_NAME: &str = "git-plz";
-const CMD_BRANCH: &str = "BRANCH";
-
-fn branch_arg_group<'a>() -> ArgGroup<'a> {
-    ArgGroup::with_name("branch").required(true)
-}
+const CMD_BRANCH: &str = "branch";
 
 #[derive(StructOpt, Debug)]
 struct PathArg {
     /// Path to execute command. Defaults to working directory.
-    #[structopt(name = "PATH", parse(from_os_str))]
-    value: Option<PathBuf>,
+    path: Option<PathBuf>,
 }
 
 impl Into<PathBuf> for PathArg {
     fn into(self) -> PathBuf {
-        self.value
+        self.path
             .unwrap_or_else(|| env::current_dir().expect("Could not get working directory"))
     }
 }
 
 #[derive(StructOpt, Debug)]
-#[structopt(bin_name = APP_NAME)]
+#[structopt(author, about)]
 enum RunOption {
     /// Perform bulk local branch operations
-    #[structopt(name = "branch", group = branch_arg_group())]
+    #[structopt(group = ArgGroup::with_name("branch").required(true))]
     Branch {
         #[structopt(
-            short = "f",
-            long = "find",
-            group = "branch",
+            short,
+            long,
+            group = CMD_BRANCH,
             value_name = CMD_BRANCH,
         )]
         find: Option<String>,
         #[structopt(
-            short = "d",
-            long = "delete",
-            group = "branch",
+            short,
+            long,
+            group = CMD_BRANCH,
             value_name = CMD_BRANCH
         )]
         delete: Option<String>,
@@ -47,28 +41,23 @@ enum RunOption {
         path: PathArg,
     },
     /// Checkout branch across repos
-    #[structopt(name = "checkout")]
     Checkout {
         /// Branch name
-        #[structopt(name = "BRANCH")]
         branch: String,
         #[structopt(flatten)]
         path: PathArg,
     },
     /// Recursive fetch
-    #[structopt(name = "fetch")]
     Fetch {
         #[structopt(flatten)]
         path: PathArg,
     },
     /// Recursive hard reset
-    #[structopt(name = "reset")]
     Reset {
         #[structopt(flatten)]
         path: PathArg,
     },
     /// Recursive directory search version of git status
-    #[structopt(name = "status")]
     Status {
         #[structopt(flatten)]
         path: PathArg,
