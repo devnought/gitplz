@@ -2,7 +2,7 @@ use command::*;
 use std::{env, path::PathBuf};
 use structopt::{clap::ArgGroup, StructOpt};
 
-const APP_NAME: &str = "git plz";
+const APP_NAME: &str = "git-plz";
 const CMD_BRANCH: &str = "BRANCH";
 
 fn branch_arg_group<'a>() -> ArgGroup<'a> {
@@ -24,23 +24,23 @@ impl Into<PathBuf> for PathArg {
 }
 
 #[derive(StructOpt, Debug)]
-#[structopt(raw(bin_name = "APP_NAME"))]
+#[structopt(bin_name = APP_NAME)]
 enum RunOption {
     /// Perform bulk local branch operations
-    #[structopt(name = "branch", raw(group = "branch_arg_group()"))]
+    #[structopt(name = "branch", group = branch_arg_group())]
     Branch {
         #[structopt(
             short = "f",
             long = "find",
             group = "branch",
-            raw(value_name = "CMD_BRANCH")
+            value_name = CMD_BRANCH,
         )]
         find: Option<String>,
         #[structopt(
             short = "d",
             long = "delete",
             group = "branch",
-            raw(value_name = "CMD_BRANCH")
+            value_name = CMD_BRANCH
         )]
         delete: Option<String>,
         #[structopt(flatten)]
